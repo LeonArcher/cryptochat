@@ -1,11 +1,11 @@
-package com.streamdata.leon.cryptochat;
+package com.streamdata.apps.cryptochat;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import com.streamdata.leon.cryptochat.models.Contact;
+import com.streamdata.apps.cryptochat.models.Contact;
 
 public class ContactListActivity extends AppCompatActivity {
 

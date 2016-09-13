@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "com.streamdata.leon.cryptochat"
+        applicationId "com.streamdata.apps.cryptochat"
         minSdkVersion 19
         targetSdkVersion 24
         versionCode 1

@@ -1,4 +1,4 @@
-package com.streamdata.leon.cryptochat.models;
+package com.streamdata.apps.cryptochat.models;
 
 import java.util.Date;
 
