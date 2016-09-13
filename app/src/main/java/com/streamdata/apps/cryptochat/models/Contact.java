@@ -1,6 +1,6 @@
 package com.streamdata.apps.cryptochat.models;
 
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 
 
 /**
@@ -10,9 +10,9 @@ public class Contact {
 
     private final String id;
     private final String name;
-    private final Drawable icon;
+    private final Bitmap icon;
 
-    public Contact(String id, String name, Drawable icon) {
+    public Contact(String id, String name, Bitmap icon) {
         this.id = id;
         this.name = name;
         this.icon = icon;
@@ -31,7 +31,7 @@ public class Contact {
         return name;
     }
 
-    public Drawable getIcon() {
+    public Bitmap getIcon() {
         return icon;
     }
 }
