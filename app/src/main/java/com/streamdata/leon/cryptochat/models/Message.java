@@ -6,10 +6,15 @@ import java.util.Date;
  * Created by Leon Archer on 12.09.2016.
  */
 public class Message {
-    public Message(Contact sender, String text, Date sent_time) {
+
+    private final String text;
+    private final Contact sender;
+    private final Date sentTime;
+
+    public Message(Contact sender, String text, Date sentTime) {
         this.sender = sender;
         this.text = text;
-        this.sent_time = sent_time;
+        this.sentTime = sentTime;
     }
 
     public String getText() {
@@ -20,11 +25,7 @@ public class Message {
         return sender;
     }
 
-    public Date getSent_time() {
-        return sent_time;
+    public Date getSentTime() {
+        return sentTime;
     }
-
-    private String text;
-    private Contact sender;
-    private Date sent_time;
 }
