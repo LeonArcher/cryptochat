@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:paddingStart="?android:attr/listPreferredItemPaddingStart"
@@ -11,8 +11,6 @@
         android:id="@+id/icon"
         android:layout_width="@dimen/contact_icon_size"
         android:layout_height="@dimen/contact_icon_size"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentTop="true"
         android:layout_marginEnd="6dip"
         android:contentDescription="icon"/>
 
@@ -20,11 +18,7 @@
         android:id="@+id/name"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_alignParentTop="true"
-        android:layout_alignWithParentIfMissing="true"
-        android:layout_toEndOf="@id/icon"
         android:gravity="center_vertical"
-        android:text="12lkfsdjlfjlrfjekorje"
         android:textSize="@dimen/contact_text_size" />
 
-</RelativeLayout>
+</LinearLayout>

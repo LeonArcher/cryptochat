@@ -2,6 +2,8 @@ package com.streamdata.apps.cryptochat.models;
 
 import android.graphics.Bitmap;
 
+import com.streamdata.apps.cryptochat.utils.Icon;
+
 
 /**
  * Created by Leon Archer on 12.09.2016.
@@ -10,9 +12,9 @@ public class Contact {
 
     private final String id;
     private final String name;
-    private final Bitmap icon;
+    private final Icon icon;
 
-    public Contact(String id, String name, Bitmap icon) {
+    public Contact(String id, String name, Icon icon) {
         this.id = id;
         this.name = name;
         this.icon = icon;
@@ -31,7 +33,7 @@ public class Contact {
         return name;
     }
 
-    public Bitmap getIcon() {
-        return icon;
+    public Bitmap getIconBitmap() {
+        return icon.getBitmap();
     }
 }
