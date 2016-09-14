@@ -2,20 +2,17 @@ package com.streamdata.apps.cryptochat;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.streamdata.apps.cryptochat.models.Contact;
-import com.streamdata.apps.cryptochat.utils.Icon;
 import com.streamdata.apps.cryptochat.utils.ResourceIcon;
 
 import java.util.ArrayList;
@@ -50,23 +47,44 @@ public class ContactListActivity extends AppCompatActivity {
     }
 
     // custom adapter for better contacts representation (including additional info)
-    private static class ContactAdapter extends ArrayAdapter<Contact> {
+    private static class ContactAdapter extends BaseAdapter {
+        private Context context;
+        private ArrayList<Contact> contacts;
+
         public ContactAdapter(Context context, ArrayList<Contact> contacts) {
-            super(context, R.layout.contact_list_item, contacts);
+            this.context = context;
+            this.contacts = contacts;
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public Contact getItem(int i) {
+            return contacts.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return i;
+        }
+
+        @Override
+        public int getCount() {
+            return contacts.size();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup viewGroup) {
             ViewHolder viewHolder;
             Contact contact = getItem(position);
 
             if (convertView == null) {
-                convertView = LayoutInflater.from(getContext())
-                        .inflate(R.layout.contact_list_item, null);
+                LayoutInflater inflater = (LayoutInflater) context
+                        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                convertView = inflater.inflate(R.layout.contact_list_item, viewGroup, false);
 
-                viewHolder = new ViewHolder();
-                viewHolder.txtItem = (TextView) convertView.findViewById(R.id.name);
-                viewHolder.imgItem = (ImageView) convertView.findViewById(R.id.icon);
+                viewHolder = new ViewHolder(
+                        (TextView) convertView.findViewById(R.id.name),
+                        (ImageView) convertView.findViewById(R.id.icon)
+                );
                 convertView.setTag(viewHolder);
             } else {
                 viewHolder = (ViewHolder) convertView.getTag();
@@ -80,8 +98,13 @@ public class ContactListActivity extends AppCompatActivity {
 
         // ViewHolder pattern for better list performance
         private static class ViewHolder {
-            TextView txtItem;
-            ImageView imgItem;
+            public final TextView txtItem;
+            public final ImageView imgItem;
+
+            public ViewHolder(TextView txtItem, ImageView imgItem) {
+                this.txtItem = txtItem;
+                this.imgItem = imgItem;
+            }
         }
     }
 }
