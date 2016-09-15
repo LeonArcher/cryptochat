@@ -19,3 +19,17 @@ api = Api(app)
 
 api.add_resource(PackageResource, '/api/packages/', endpoint='packages')
 api.add_resource(PackageResource, '/api/packages/<string:receiver_id>', endpoint='package')
+
+
+from app.utils import DatabaseCleaner
+
+
+@app.before_first_request
+def start_db_auto_cleaner():
+    """
+    Launch the daemon to clean database from old packages
+    :return: None
+    """
+    db_cleaner = DatabaseCleaner()
+    db_cleaner.daemon = True
+    db_cleaner.start()
