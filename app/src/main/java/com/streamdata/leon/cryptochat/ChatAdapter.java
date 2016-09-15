@@ -1,37 +1,30 @@
 package com.streamdata.leon.cryptochat;
 
-
 import java.util.ArrayList;
-
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-/**
- * Created by Kmike on 13.09.2016.
- */
-//public class ChatAdapter {
-//}
+import com.streamdata.leon.cryptochat.models.Message;
 
 
 public class ChatAdapter extends BaseAdapter {
 
-    private static LayoutInflater inflater = null;
-    ArrayList&lt;ChatMessage&gt; chatMessageList;
+    private LayoutInflater inflater = null;
+    ArrayList<Message> chatMessageList;
 
-    public ChatAdapter(Activity activity, ArrayList&lt;ChatMessage&gt; list) {
+    public ChatAdapter(Activity activity, ArrayList<Message> list) {
         chatMessageList = list;
         inflater = (LayoutInflater) activity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    }
 
+    static class ViewHolder {
+        TextView txtItem;
     }
 
     @Override
@@ -44,6 +37,7 @@ public class ChatAdapter extends BaseAdapter {
         return position;
     }
 
+
     @Override
     public long getItemId(int position) {
         return position;
@@ -51,33 +45,37 @@ public class ChatAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ChatMessage message = (ChatMessage) chatMessageList.get(position);
+        ViewHolder viewHolder;
+        Message message = (Message) chatMessageList.get(position);
         View vi = convertView;
-        if (convertView == null)
-            vi = inflater.inflate(R.layout.chatbubble, null);
 
-        TextView msg = (TextView) vi.findViewById(R.id.message_text);
-        msg.setText(message.body);
-        LinearLayout layout = (LinearLayout) vi
-                .findViewById(R.id.bubble_layout);
-        LinearLayout parent_layout = (LinearLayout) vi
-                .findViewById(R.id.bubble_layout_parent);
+        if (convertView == null){
 
+            vi = inflater.inflate(R.layout.input_chat_item, null);
+            viewHolder = new ViewHolder();
+            viewHolder.txtItem = (TextView) vi.findViewById(R.id.message_text);
+            vi.setTag(viewHolder);
+        } else {
+            viewHolder = (ViewHolder) vi.getTag();
+        }
+
+        LinearLayout bubbleLayout = (LinearLayout) vi.findViewById(R.id.bubble_layout);
         // if message is mine then align to right
         if (message.isMine) {
-            layout.setBackgroundResource(R.drawable.bubble2);
-            parent_layout.setGravity(Gravity.RIGHT);
+            bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_left);
         }
         // If not mine then align to left
         else {
-            layout.setBackgroundResource(R.drawable.bubble1);
-            parent_layout.setGravity(Gravity.LEFT);
+            bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_right);
         }
-        msg.setTextColor(Color.BLACK);
+
+        viewHolder.txtItem.setText(message.getText());
+
         return vi;
     }
 
-    public void add(ChatMessage object) {
+
+    public void add(Message object) {
         chatMessageList.add(object);
     }
 }
