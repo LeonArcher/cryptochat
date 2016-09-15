@@ -37,7 +37,7 @@ class PackageResource(Resource):
         :param receiver_id: string id of the receiver
         :return: list of packages
         """
-        packages = PackageModel.query.filter(PackageModel.receiver_id == receiver_id)
+        packages = PackageModel.query.filter(PackageModel.receiver_id == receiver_id).all()
         return packages, 200
 
     @marshal_with(package_fields)
