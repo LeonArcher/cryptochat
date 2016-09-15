@@ -41,7 +41,7 @@ class FlaskTest(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(app_test.config['DATABASE'])
 
-    def test_packages_handle(self):
+    def test_get_packages(self):
         url = 'http://127.0.0.1:5000/api/packages/alex42'
 
         response = requests.get(url)
