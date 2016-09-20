@@ -1,13 +1,20 @@
-package com.streamdata.leon.cryptochat.models;
+package com.streamdata.apps.cryptochat.models;
 
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
+
+import com.streamdata.apps.cryptochat.utils.Icon;
 
 
 /**
  * Created by Leon Archer on 12.09.2016.
  */
 public class Contact {
-    public Contact(String id, String name, Drawable icon) {
+
+    private final String id;
+    private final String name;
+    private final Icon icon;
+
+    public Contact(String id, String name, Icon icon) {
         this.id = id;
         this.name = name;
         this.icon = icon;
@@ -26,11 +33,7 @@ public class Contact {
         return name;
     }
 
-    public Drawable getIcon() {
-        return icon;
+    public Bitmap getIconBitmap() {
+        return icon.getBitmap();
     }
-
-    private String id;
-    private String name;
-    private Drawable icon;
 }

@@ -1,4 +1,4 @@
-package com.streamdata.leon.cryptochat.utils;
+package com.streamdata.apps.cryptochat.utils;
 
 import android.widget.TextView;
 
@@ -10,7 +10,9 @@ import java.util.Locale;
 
 public class DateUtils {
 
-    public Date stringToDate(String strDate) {
+    private DateUtils(){}
+
+    public static Date stringToDate(String strDate) {
 
         Date date = new Date();
         try {

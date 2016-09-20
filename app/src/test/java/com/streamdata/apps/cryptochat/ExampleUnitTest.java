@@ -1,4 +1,4 @@
-package com.streamdata.leon.cryptochat;
+package com.streamdata.apps.cryptochat;
 
 import org.junit.Test;
 

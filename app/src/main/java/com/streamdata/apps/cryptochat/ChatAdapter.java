@@ -1,26 +1,34 @@
-package com.streamdata.leon.cryptochat;
+package com.streamdata.apps.cryptochat;
 
 import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import com.streamdata.leon.cryptochat.models.Message;
+
+import com.streamdata.apps.cryptochat.models.Message;
 
 
 public class ChatAdapter extends BaseAdapter {
 
     private LayoutInflater inflater = null;
-    ArrayList<Message> chatMessageList;
+    private final ArrayList<Message> chatMessageList;
+    private final float scaleScreen;
+    private final int messageIndent = 100;
 
-    public ChatAdapter(Activity activity, ArrayList<Message> list) {
+    public ChatAdapter(Activity activity, ArrayList<Message> list, float scale) {
         chatMessageList = list;
         inflater = (LayoutInflater) activity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+        scaleScreen = scale;
     }
 
     static class ViewHolder {
@@ -59,21 +67,30 @@ public class ChatAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) vi.getTag();
         }
 
-        LinearLayout bubbleLayout = (LinearLayout) vi.findViewById(R.id.bubble_layout);
+        FrameLayout bubbleLayout = (FrameLayout) vi.findViewById(R.id.bubble_layout);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        
+        int pixels = (int) (messageIndent * scaleScreen);
+
         // if message is mine then align to right
-        if (message.isMine) {
+        if (message.getIsMine()) {
             bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_left);
+            params.gravity = Gravity.START;
+            params.setMarginEnd(pixels);
         }
         // If not mine then align to left
         else {
             bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_right);
+            params.gravity = Gravity.END;
+            params.setMarginStart(pixels);
         }
 
+        bubbleLayout.setLayoutParams(params);
         viewHolder.txtItem.setText(message.getText());
 
         return vi;
     }
-
 
     public void add(Message object) {
         chatMessageList.add(object);

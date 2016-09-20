@@ -1,4 +1,4 @@
-package com.streamdata.leon.cryptochat;
+package com.streamdata.apps.cryptochat;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -11,8 +11,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Intent intent = new Intent(this, ContactListActivity.class);
-        Intent intent = new Intent(this, MessageListActivity.class);
+        Intent intent = new Intent(this, ContactListActivity.class);
+
         startActivity(intent);
     }
 }
