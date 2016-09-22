@@ -3,14 +3,12 @@ package com.streamdata.apps.cryptochat;
 import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Context;
-import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.streamdata.apps.cryptochat.models.Message;
@@ -18,7 +16,7 @@ import com.streamdata.apps.cryptochat.models.Message;
 
 public class ChatAdapter extends BaseAdapter {
 
-    private LayoutInflater inflater = null;
+    private final LayoutInflater inflater;
     private final ArrayList<Message> chatMessageList;
     private final float scaleScreen;
     private final int messageIndent = 100;
