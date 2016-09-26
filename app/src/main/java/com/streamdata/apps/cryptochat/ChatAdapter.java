@@ -14,6 +14,8 @@ import android.widget.TextView;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 
+import org.w3c.dom.Text;
+
 
 public class ChatAdapter extends BaseAdapter {
 
@@ -30,8 +32,14 @@ public class ChatAdapter extends BaseAdapter {
         scaleScreen = scale;
     }
 
-    static class ViewHolder {
-        TextView txtItem;
+    private static class ViewHolder {
+        public final TextView txtItem;
+        public final FrameLayout frmItem;
+
+        ViewHolder(TextView txtItem, FrameLayout frmItem) {
+            this.txtItem = txtItem;
+            this.frmItem = frmItem;
+        }
     }
 
     @Override
@@ -59,14 +67,17 @@ public class ChatAdapter extends BaseAdapter {
         if (convertView == null){
 
             vi = inflater.inflate(R.layout.input_chat_item, viewGroup, false);
-            viewHolder = new ViewHolder();
-            viewHolder.txtItem = (TextView) vi.findViewById(R.id.message_text);
+
+            viewHolder = new ViewHolder(
+                    (TextView) vi.findViewById(R.id.message_text),
+                    (FrameLayout) vi.findViewById(R.id.bubble_layout)
+            );
             vi.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) vi.getTag();
         }
 
-        FrameLayout bubbleLayout = (FrameLayout) vi.findViewById(R.id.bubble_layout);
+        FrameLayout bubbleLayout = viewHolder.frmItem;
 
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
