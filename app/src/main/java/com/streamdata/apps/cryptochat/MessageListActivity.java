@@ -11,77 +11,91 @@ import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 public class MessageListActivity extends AppCompatActivity {
 
-    ArrayList<Message> messageList = new ArrayList<Message>();
+    // TODO: get contact list and self contact from database
+    Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
+    ArrayList<Message> messageList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_list);
 
-        messageList.add(0, new Message(new Contact("alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+        Contact friendContact = new Contact(1, "jack_slash", "Jack", null);
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "Hi!, How are you?",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
-        messageList.add(1, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+                DateUtils.stringToDate("2 15 2015")
+        ));
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "i'm Fine,  and you?",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
-
-        messageList.add(2, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+                DateUtils.stringToDate("2 15 2015")
+        ));
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
-        messageList.add(3, new Message(new Contact( "alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+                DateUtils.stringToDate("2 15 2015")
+        ));
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
-        messageList.add(4, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+                DateUtils.stringToDate("2 15 2015")
+        ));
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "Shot",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
-        messageList.add(5, new Message(new Contact("alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+                DateUtils.stringToDate("2 15 2015")
+        ));
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "Shot",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
-        messageList.add(6, new Message(new Contact("alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+                DateUtils.stringToDate("2 15 2015")
+                ));
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
-        messageList.add(7, new Message(new Contact("alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+                DateUtils.stringToDate("2 15 2015")
+                ));
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
-        messageList.add(8, new Message(new Contact("alex45", "Alex", null),
-                new Contact("john_s", "John", null),
+                DateUtils.stringToDate("2 15 2015")
+                ));
+        messageList.add(new Message(
+                selfContact,
+                friendContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.FALSE));
+                DateUtils.stringToDate("2 15 2015")
+                ));
 
-        messageList.add(9, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
-        messageList.add(10, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+                DateUtils.stringToDate("2 15 2015")
+                ));
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
-        messageList.add(11, new Message(new Contact("john_s", "John", null),
-                new Contact("alex45", "Alex", null),
+                DateUtils.stringToDate("2 15 2015")
+                ));
+        messageList.add(new Message(
+                friendContact,
+                selfContact,
                 "Consecutive",
-                DateUtils.stringToDate("2 15 2015"),
-                Boolean.TRUE));
+                DateUtils.stringToDate("2 15 2015")
+                ));
 
         float scale = getResources().getDisplayMetrics().density;
         ChatAdapter chatAdapter = new ChatAdapter(this, messageList, scale);

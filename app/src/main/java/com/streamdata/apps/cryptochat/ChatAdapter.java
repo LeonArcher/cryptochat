@@ -11,6 +11,7 @@ import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 
 
@@ -19,7 +20,7 @@ public class ChatAdapter extends BaseAdapter {
     private final LayoutInflater inflater;
     private final ArrayList<Message> chatMessageList;
     private final float scaleScreen;
-    private final int messageIndent = 100;
+    private final static int messageIndent = 100;
 
     public ChatAdapter(Activity activity, ArrayList<Message> list, float scale) {
         chatMessageList = list;
@@ -50,14 +51,14 @@ public class ChatAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, ViewGroup viewGroup) {
         ViewHolder viewHolder;
-        Message message = (Message) chatMessageList.get(position);
+        Message message = chatMessageList.get(position);
         View vi = convertView;
 
         if (convertView == null){
 
-            vi = inflater.inflate(R.layout.input_chat_item, null);
+            vi = inflater.inflate(R.layout.input_chat_item, viewGroup, false);
             viewHolder = new ViewHolder();
             viewHolder.txtItem = (TextView) vi.findViewById(R.id.message_text);
             vi.setTag(viewHolder);
@@ -66,13 +67,16 @@ public class ChatAdapter extends BaseAdapter {
         }
 
         FrameLayout bubbleLayout = (FrameLayout) vi.findViewById(R.id.bubble_layout);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.MATCH_PARENT);
+
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        );
         
         int pixels = (int) (messageIndent * scaleScreen);
 
         // if message is mine then align to right
-        if (message.getIsMine()) {
+        if (message.getSender().getId() == Contact.selfId) {
             bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_left);
             params.gravity = Gravity.START;
             params.setMarginEnd(pixels);
