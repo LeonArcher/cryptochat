@@ -16,6 +16,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.streamdata.apps.cryptochat.ContactListActivity"></activity>
+        <activity android:name="com.streamdata.apps.cryptochat.MessageListActivity"></activity>
     </application>
 
 </manifest>
