@@ -5,19 +5,18 @@ import android.graphics.Bitmap;
 import com.streamdata.apps.cryptochat.utils.Icon;
 
 
-/**
- * Created by Leon Archer on 12.09.2016.
- */
 public class Contact {
 
-    private final String id;
+    private final int id;
     private final String name;
     private final Icon icon;
+    private final String publicKey;
 
-    public Contact(String id, String name, Icon icon) {
+    public Contact(int id, String name, Icon icon, String publicKey) {
         this.id = id;
         this.name = name;
         this.icon = icon;
+        this.publicKey = publicKey;
     }
 
     @Override
@@ -25,7 +24,7 @@ public class Contact {
         return getName();
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
@@ -36,4 +35,6 @@ public class Contact {
     public Bitmap getIconBitmap() {
         return icon.getBitmap();
     }
+
+    public String getPublicKey() { return publicKey; }
 }

@@ -14,7 +14,10 @@ import android.widget.TextView;
 import com.streamdata.apps.cryptochat.models.Message;
 
 
+
 public class ChatAdapter extends BaseAdapter {
+    //Achtung! Глобальная переменная
+    int mine_id = 0;
 
     private final LayoutInflater inflater;
     private final ArrayList<Message> chatMessageList;
@@ -72,7 +75,7 @@ public class ChatAdapter extends BaseAdapter {
         int pixels = (int) (messageIndent * scaleScreen);
 
         // if message is mine then align to right
-        if (message.getIsMine()) {
+        if (message.getSenderId() == mine_id) {
             bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_left);
             params.gravity = Gravity.START;
             params.setMarginEnd(pixels);

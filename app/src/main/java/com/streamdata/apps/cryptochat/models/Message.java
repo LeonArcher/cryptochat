@@ -4,19 +4,20 @@ import java.util.Date;
 import com.streamdata.apps.cryptochat.models.Contact;
 
 public class Message {
+    private final int id;
+    private final int senderId;
+    private final int receiverId;
+    private final Date date;
     private final String text;
-    private final Contact sender;
-    private final Contact receiver;
-    private final Date sentTime;
-    private final Boolean isMine;
 
-    public Message(Contact sender, Contact receiver, String text, Date sentTime, Boolean isMine) {
 
-        this.sender = sender;
-        this.receiver = receiver;
+    public Message(int id, int senderId, int receiverId, Date date, String text) {
+
+        this.id = id;
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.date = date;
         this.text = text;
-        this.sentTime = sentTime;
-        this.isMine = isMine;
     }
 
     @Override
@@ -24,21 +25,15 @@ public class Message {
         return getText();
     }
 
+    public int getId() { return id; }
+    public int getSenderId() {
+        return senderId;
+    }
+    public int getReceiverId() {
+        return receiverId;
+    }
+    public Date getDate() { return date; }
     public String getText() {
         return text;
     }
-
-    public Contact getSender() {
-        return sender;
-    }
-
-    public Contact getReceiver() {
-        return receiver;
-    }
-
-    public Date getSentTime() {
-        return sentTime;
-    }
-
-    public Boolean getIsMine() { return isMine; }
 }

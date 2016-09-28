@@ -16,8 +16,10 @@ public class DateUtils {
 
         Date date = new Date();
         try {
-            SimpleDateFormat format = new SimpleDateFormat("M d yyyy", Locale.ENGLISH);
-            date = format.parse(strDate);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                    Locale.getDefault());
+
+            date = dateFormat.parse(strDate);
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -25,6 +27,14 @@ public class DateUtils {
 
         return date;
     }
+
+    public static String dateToString(Date date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
+                Locale.getDefault());
+
+        return dateFormat.format(date);
+    }
+
 }
 
 

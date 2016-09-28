@@ -4,9 +4,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-/**
- * Created by Leon Archer on 14.09.2016.
- */
+
 public class ResourceIcon implements Icon {
     private Bitmap data = null;
     private final Resources resources;
