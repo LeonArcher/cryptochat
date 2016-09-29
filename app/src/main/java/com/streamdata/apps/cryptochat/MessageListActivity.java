@@ -11,8 +11,9 @@ import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 public class MessageListActivity extends AppCompatActivity {
 
-    // TODO: get contact list and self contact from database
+    // TODO: get message list, self contact and current contact from database
     Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
+    Contact currentContact = new Contact(1, "jack_slash", "Jack", null);
     ArrayList<Message> messageList = new ArrayList<>();
 
     @Override
@@ -20,82 +21,92 @@ public class MessageListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_list);
 
-        Contact friendContact = new Contact(1, "jack_slash", "Jack", null);
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "Hi!, How are you?",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
-                friendContact,
+                0,
+                currentContact,
                 selfContact,
                 "i'm Fine,  and you?",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
-                friendContact,
+                0,
+                currentContact,
                 selfContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
-                friendContact,
+                0,
+                currentContact,
                 selfContact,
                 "Shot",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "Shot",
                 DateUtils.stringToDate("2 15 2015")
-                ));
+        ));
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
-                ));
+        ));
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
-                ));
+        ));
         messageList.add(new Message(
+                0,
                 selfContact,
-                friendContact,
+                currentContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
-                ));
-
+        ));
         messageList.add(new Message(
-                friendContact,
-                selfContact,
-                "Consecutive",
-                DateUtils.stringToDate("2 15 2015")
-                ));
-        messageList.add(new Message(
-                friendContact,
+                0,
+                currentContact,
                 selfContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
-                ));
+        ));
         messageList.add(new Message(
-                friendContact,
+                0,
+                currentContact,
                 selfContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
-                ));
+        ));
+        messageList.add(new Message(
+                0,
+                currentContact,
+                selfContact,
+                "Consecutive",
+                DateUtils.stringToDate("2 15 2015")
+        ));
 
         float scale = getResources().getDisplayMetrics().density;
         ChatAdapter chatAdapter = new ChatAdapter(this, messageList, scale);
