@@ -12,7 +12,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -67,7 +70,7 @@ public class MessagingService {
         @Override
         public void run() {
             Log.d(MESSAGING_LOG_TAG, String.format("Message poll. Last id: %d", lastMessageId));
-            
+
             // download array with all messages for self contact
             String jData = Network.getJSON(requestUrl, Network.DEFAULT_TIMEOUT);
 
@@ -84,7 +87,18 @@ public class MessagingService {
                     final String senderId = jObject.getString("sender_id");
                     final String receiverId = jObject.getString("receiver_id");
                     final String data = jObject.getString("data");
-                    final Date sentTime = DateUtils.stringToDate(jObject.getString("sent_time"));
+                    final String dateString = jObject.getString("sent_time");
+
+                    Date sentTime = null;
+                    SimpleDateFormat dateFormat = new SimpleDateFormat(
+                            "EE, dd MMM yyyy HH:mm:ss z",
+                            Locale.US
+                    );
+                    try {
+                        sentTime = dateFormat.parse(dateString);
+                    } catch (ParseException ex) {
+                        Log.d(MESSAGING_LOG_TAG, null, ex);
+                    }
 
                     // the receiver should always be self contact
                     if (!Objects.equals(receiverId, contactKey)) throw new AssertionError();
@@ -105,6 +119,8 @@ public class MessagingService {
                     handleMessage(message);
 
                     // TODO: send message to database
+
+                    Log.d(MESSAGING_LOG_TAG, message.getText());
 
                     lastMessageId = id;
                 }
