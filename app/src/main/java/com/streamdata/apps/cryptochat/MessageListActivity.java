@@ -1,5 +1,6 @@
 package com.streamdata.apps.cryptochat;
 
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ListView;
@@ -16,9 +17,26 @@ public class MessageListActivity extends AppCompatActivity {
     Contact currentContact = new Contact(1, "jack_slash", "Jack", null);
     ArrayList<Message> messageList = new ArrayList<>();
 
+    private int lastMessageId;
+
+    MessagingService messagingService;
+    MessagingHandler messagingHandler;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // TODO: load message history from database
+        // TODO: load lastMessageId from settings
+        lastMessageId = 0;
+
+        // initializing messaging service and handler
+        messagingService = new MessagingService();
+        messagingHandler = new MessagingHandler();
+
+        // subscribing to incoming messages (all new ones from lastMessageId)
+        messagingService.bindListener(messagingHandler, selfContact.getServerId(), lastMessageId);
+
         setContentView(R.layout.activity_message_list);
 
         messageList.add(new Message(
@@ -113,5 +131,22 @@ public class MessageListActivity extends AppCompatActivity {
         ListView listView = (ListView) findViewById(R.id.msgListView);
         listView.setAdapter(chatAdapter);
 
+    }
+
+    private class MessagingHandler extends Handler {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            switch (msg.what) {
+                case MessagingService.STATUS_NEW_MESSAGE:
+                    // TODO: handle message
+                    break;
+                case MessagingService.STATUS_SEND_MESSAGE_SUCCESS:
+                    // TODO: handle successfully sent message
+                    break;
+                case MessagingService.STATUS_SEND_MESSAGE_ERROR:
+                    // TODO: handle fail sent message
+                    break;
+            }
+        }
     }
 }
