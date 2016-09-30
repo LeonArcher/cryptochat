@@ -3,6 +3,8 @@ package com.streamdata.apps.cryptochat;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.BaseAdapter;
 import android.widget.ListView;
 import java.util.ArrayList;
 import com.streamdata.apps.cryptochat.models.Contact;
@@ -12,12 +14,15 @@ import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 public class MessageListActivity extends AppCompatActivity {
 
-    // TODO: get message list, self contact and current contact from database
+    // TODO: get message list, self contact and target contact from database
     Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
-    Contact currentContact = new Contact(1, "jack_slash", "Jack", null);
+    Contact targetContact = new Contact(1, "jack_slash", "Jack", null);
     ArrayList<Message> messageList = new ArrayList<>();
 
     private int lastMessageId;
+
+    private BaseAdapter adapter;
+    private ListView listView;
 
     MessagingService messagingService;
     MessagingHandler messagingHandler;
@@ -35,27 +40,25 @@ public class MessageListActivity extends AppCompatActivity {
         messagingHandler = new MessagingHandler();
 
         // subscribing to incoming messages (all new ones from lastMessageId)
-        messagingService.bindListener(messagingHandler, selfContact.getServerId(), lastMessageId);
-
-        setContentView(R.layout.activity_message_list);
+        messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
 
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "Hi!, How are you?",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "i'm Fine,  and you?",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
@@ -64,14 +67,14 @@ public class MessageListActivity extends AppCompatActivity {
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong" +
                         "LongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLongLong",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "Shot",
                 DateUtils.stringToDate("2 15 2015")
@@ -79,58 +82,59 @@ public class MessageListActivity extends AppCompatActivity {
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "Shot",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
                 selfContact,
-                currentContact,
+                targetContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
         messageList.add(new Message(
                 0,
-                currentContact,
+                targetContact,
                 selfContact,
                 "Consecutive",
                 DateUtils.stringToDate("2 15 2015")
         ));
+
+        setContentView(R.layout.activity_message_list);
 
         float scale = getResources().getDisplayMetrics().density;
-        ChatAdapter chatAdapter = new ChatAdapter(this, messageList, scale);
-        ListView listView = (ListView) findViewById(R.id.msgListView);
-        listView.setAdapter(chatAdapter);
-
+        adapter = new MessageListAdapter(this, messageList, scale);
+        listView = (ListView) findViewById(R.id.msgListView);
+        listView.setAdapter(adapter);
     }
 
     private class MessagingHandler extends Handler {
@@ -139,6 +143,22 @@ public class MessageListActivity extends AppCompatActivity {
             switch (msg.what) {
                 case MessagingService.STATUS_NEW_MESSAGE:
                     // TODO: handle message
+                    Message message = (Message) msg.obj;
+
+                    // update last received message id
+                    lastMessageId = message.getId();
+
+                    // update message list
+                    messageList.add(message);
+                    adapter.notifyDataSetChanged();
+
+                    // scroll down
+                    listView.smoothScrollToPosition(adapter.getCount() - 1);
+
+                    Log.d(MessagingService.MESSAGING_LOG_TAG, String.format(
+                            "Received message with text: %s",
+                            message.getText()
+                    ));
                     break;
                 case MessagingService.STATUS_SEND_MESSAGE_SUCCESS:
                     // TODO: handle successfully sent message

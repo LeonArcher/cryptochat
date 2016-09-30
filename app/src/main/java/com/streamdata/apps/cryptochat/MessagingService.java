@@ -43,27 +43,26 @@ public class MessagingService {
 
         private final Handler handler;
 
-        private final String contactKey; // string key to access incoming messages for self contact
+        private final Contact selfContact; // filter the receiver of messages
+        private final Contact targetContact; // filter the sender of messages
+
         private int lastMessageId; // messages with smaller id will not be downloaded (will increase during work)
 
         private final String requestUrl;
 
         android.os.Message msg; // system message for callback
 
-        private final Contact selfContact;
-
-        public MessageListenerJob(Handler handler, String contactKey, int lastMessageId) {
+        public MessageListenerJob(Handler handler, Contact selfContact, Contact targetContact,
+                                  int lastMessageId) {
             this.handler = handler;
             this.lastMessageId = lastMessageId;
-            this.contactKey = contactKey;
-
-            // TODO: read self contact from the database
-            selfContact = new Contact(Contact.selfId, contactKey, "Me", null);
+            this.selfContact = selfContact;
+            this.targetContact = targetContact;
 
             requestUrl = String.format(
                     "%s/api/packages/%s",
                     MessagingService.WEB_SERVICE_URL,
-                    contactKey
+                    selfContact.getServerId()
             );
         }
 
@@ -101,21 +100,21 @@ public class MessagingService {
                     }
 
                     // the receiver should always be self contact
-                    if (!Objects.equals(receiverId, contactKey)) throw new AssertionError();
-
-                    // only new messages should be processed
-                    if (id <= lastMessageId) {
-                        continue;
+                    if (!Objects.equals(receiverId, selfContact.getServerId())) {
+                        throw new AssertionError();
                     }
 
-                    // TODO: read contact from database based on serverId (or handle missing contact)
-                    Contact contact = new Contact(1, senderId, "John Doe", null);
+                    // only new messages from target contact should be processed
+                    if ((id <= lastMessageId) ||
+                            (!Objects.equals(senderId, targetContact.getServerId()))) {
+                        continue;
+                    }
 
                     // TODO: decrypt the message text
                     final String text = data;
 
                     // create and handle message (send to main thread via handler)
-                    Message message = new Message(id, contact, selfContact, text, sentTime);
+                    Message message = new Message(id, targetContact, selfContact, text, sentTime);
                     handleMessage(message);
 
                     // TODO: send message to database
@@ -151,10 +150,11 @@ public class MessagingService {
         }
     }
 
-    public void bindListener(Handler handler, String contactKey, int lastMessageId) {
+    public void bindListener(Handler handler, Contact selfContact, Contact targetContact,
+                             int lastMessageId) {
         Log.d("debug", "Listener binding procedure initiated.");
         receiveExecutor.scheduleAtFixedRate(
-                new MessageListenerJob(handler, contactKey, lastMessageId),
+                new MessageListenerJob(handler, selfContact, targetContact, lastMessageId),
                 0,
                 MESSAGES_POLLING_RATE_SECONDS,
                 TimeUnit.SECONDS
