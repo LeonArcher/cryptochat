@@ -1,6 +1,5 @@
 package com.streamdata.apps.cryptochat;
 
-import android.content.DialogInterface;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -204,29 +203,28 @@ public class MessageListActivity extends AppCompatActivity implements View.OnCli
             }
 
             switch (msg.what) {
-                case MessagingService.STATUS_NEW_MESSAGE:
-                    // get message object
-                    Message message = (Message) msg.obj;
+                case MessagingService.STATUS_NEW_MESSAGES:
+                    // get message list object
+                    ArrayList<Message> newMessages = (ArrayList<Message>) msg.obj;
 
                     // update last received message id
-                    parent.lastMessageId = message.getId();
+                    parent.lastMessageId = newMessages.get(newMessages.size() - 1).getId();
 
                     // update message list
-                    parent.messageList.add(message);
+                    parent.messageList.addAll(newMessages);
                     parent.adapter.notifyDataSetChanged();
 
                     // scroll down
                     parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
 
-                    Log.d(MessagingService.MESSAGING_LOG_TAG, String.format(
-                            "Received message with text: %s",
-                            message.getText()
-                    ));
+                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Received messages pack.");
                     break;
+
                 case MessagingService.STATUS_SEND_MESSAGE_SUCCESS:
                     // TODO: handle successfully sent message
                     Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sent successfully.");
                     break;
+
                 case MessagingService.STATUS_SEND_MESSAGE_ERROR:
                     // TODO: handle fail sent message
                     Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sending error.");

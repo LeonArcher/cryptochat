@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
-import com.streamdata.apps.cryptochat.utils.DateUtils;
 import com.streamdata.apps.cryptochat.utils.Network;
 
 import org.json.JSONArray;
@@ -14,6 +13,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MessagingService {
 
-    public static final int STATUS_NEW_MESSAGE = 0;
+    public static final int STATUS_NEW_MESSAGES = 0;
     public static final int STATUS_SEND_MESSAGE_SUCCESS = 1;
     public static final int STATUS_SEND_MESSAGE_ERROR = 2;
 
@@ -74,7 +74,8 @@ public class MessagingService {
             // download array with all messages for self contact
             String jData = Network.getJSON(requestUrl, Network.DEFAULT_TIMEOUT);
 
-            // TODO: send messages for handling in arrays, not one by one
+            // save all incoming messages to list and handle later
+            ArrayList<Message> messageList = new ArrayList<>();
 
             // parse JSON array and simultaneously handle messages
             try {
@@ -119,21 +120,25 @@ public class MessagingService {
 
                     // create and handle message (send to main thread via handler)
                     Message message = new Message(id, targetContact, selfContact, text, sentTime);
-                    handleMessage(message);
+                    messageList.add(message);
 
                     // TODO: send message to database
 
                     Log.d(MESSAGING_LOG_TAG, message.getText());
-
-                    lastMessageId = id;
                 }
             } catch (JSONException ex) {
                 Log.e(MESSAGING_JSON_LOG_TAG, null, ex);
             }
+
+            // handle messages if new ones received
+            if (messageList.size() > 0) {
+                lastMessageId = messageList.get(messageList.size() - 1).getId();
+                handleMessages(messageList);
+            }
         }
 
-        private void handleMessage(Message message) {
-            msg = handler.obtainMessage(STATUS_NEW_MESSAGE, message);
+        private void handleMessages(ArrayList<Message> messages) {
+            msg = handler.obtainMessage(STATUS_NEW_MESSAGES, messages);
             handler.sendMessage(msg);
         }
     }
