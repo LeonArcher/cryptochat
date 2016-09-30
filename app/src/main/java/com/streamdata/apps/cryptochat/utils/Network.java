@@ -16,38 +16,43 @@ public class Network {
     public static final int DEFAULT_TIMEOUT = 5000;
 
     public static String getJSON(String url, int timeout) {
-        HttpURLConnection c = null;
+        HttpURLConnection connection = null;
         try {
+            // setup and process connection
             URL u = new URL(url);
-            c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setRequestProperty("Content-length", "0");
-            c.setUseCaches(false);
-            c.setAllowUserInteraction(false);
-            c.setConnectTimeout(timeout);
-            c.setReadTimeout(timeout);
-            c.connect();
-            int status = c.getResponseCode();
+            connection = (HttpURLConnection) u.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Content-length", "0");
+            connection.setUseCaches(false);
+            connection.setAllowUserInteraction(false);
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+            connection.connect();
 
+            // receive data from input stream on successful response
+            int status = connection.getResponseCode();
             switch (status) {
                 case 200:
                 case 201:
-                    BufferedReader br = new BufferedReader(new InputStreamReader(c.getInputStream()));
-                    StringBuilder sb = new StringBuilder();
+                    BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(connection.getInputStream()));
+
+                    StringBuilder stringBuilder = new StringBuilder();
                     String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line).append("\n");
+                    while ((line = reader.readLine()) != null) {
+                        stringBuilder.append(line).append("\n");
                     }
-                    br.close();
-                    return sb.toString();
+                    reader.close();
+                    return stringBuilder.toString();
             }
 
         } catch (IOException ex) {
             Log.d(NETWORK_LOG_TAG, null, ex);
-        } finally {
-            if (c != null) {
+
+        } finally { // close connection if necessary
+            if (connection != null) {
                 try {
-                    c.disconnect();
+                    connection.disconnect();
                 } catch (Exception ex) {
                     Log.d(NETWORK_LOG_TAG, null, ex);
                 }
