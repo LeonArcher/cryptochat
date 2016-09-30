@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
@@ -37,7 +39,7 @@ public class MessageListActivity extends AppCompatActivity {
 
         // initializing messaging service and handler
         messagingService = new MessagingService();
-        messagingHandler = new MessagingHandler();
+        messagingHandler = new MessagingHandler(this);
 
         // subscribing to incoming messages (all new ones from lastMessageId)
         messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
@@ -137,23 +139,36 @@ public class MessageListActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
     }
 
-    private class MessagingHandler extends Handler {
+    private static class MessagingHandler extends Handler {
+        // weak bound with UI thread parent activity
+        private final WeakReference<MessageListActivity> parentActivityReference;
+
+        public MessagingHandler(MessageListActivity parent) {
+            parentActivityReference = new WeakReference<>(parent);
+        }
+
         @Override
         public void handleMessage(android.os.Message msg) {
+            MessageListActivity parent = parentActivityReference.get();
+
+            if (parent == null) {
+                return;
+            }
+
             switch (msg.what) {
                 case MessagingService.STATUS_NEW_MESSAGE:
                     // TODO: handle message
                     Message message = (Message) msg.obj;
 
                     // update last received message id
-                    lastMessageId = message.getId();
+                    parent.lastMessageId = message.getId();
 
                     // update message list
-                    messageList.add(message);
-                    adapter.notifyDataSetChanged();
+                    parent.messageList.add(message);
+                    parent.adapter.notifyDataSetChanged();
 
                     // scroll down
-                    listView.smoothScrollToPosition(adapter.getCount() - 1);
+                    parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
 
                     Log.d(MessagingService.MESSAGING_LOG_TAG, String.format(
                             "Received message with text: %s",
