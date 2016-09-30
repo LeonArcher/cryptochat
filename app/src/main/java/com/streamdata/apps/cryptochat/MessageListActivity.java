@@ -48,9 +48,7 @@ public class MessageListActivity extends AppCompatActivity implements View.OnCli
         messagingService = new MessagingService();
         messagingHandler = new MessagingHandler(this);
 
-        // subscribing to incoming messages (all new ones from lastMessageId)
-        messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
-
+        // init activity view
         setContentView(R.layout.activity_message_list);
 
         // setup listView configuration
@@ -65,6 +63,20 @@ public class MessageListActivity extends AppCompatActivity implements View.OnCli
 
         // map message edit text
         messageEditText = (EditText) findViewById(R.id.messageEditText);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        messagingService.unbindListener();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // subscribing to incoming messages (all new ones from lastMessageId)
+        messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
     }
 
     // handle send message event

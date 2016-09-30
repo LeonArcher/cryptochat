@@ -37,8 +37,8 @@ public class MessagingService {
     public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
     public static final int MESSAGES_POLLING_RATE_SECONDS = 5;
 
-    ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
-    ScheduledExecutorService receiveExecutor = Executors.newSingleThreadScheduledExecutor();
+    private ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
+    private ScheduledExecutorService receiveExecutor = null;
 
     private static class MessageListenerJob implements Runnable {
 
@@ -194,13 +194,25 @@ public class MessagingService {
 
     public void bindListener(Handler handler, Contact selfContact, Contact targetContact,
                              int lastMessageId) {
-        Log.d("debug", "Listener binding procedure initiated.");
+        // unbind listener first before creating a new one
+        if (receiveExecutor != null) {
+            unbindListener();
+        }
+
+        Log.d(MESSAGING_LOG_TAG, "Listener binding procedure initiated.");
+        receiveExecutor = Executors.newSingleThreadScheduledExecutor();
         receiveExecutor.scheduleAtFixedRate(
                 new MessageListenerJob(handler, selfContact, targetContact, lastMessageId),
                 0,
                 MESSAGES_POLLING_RATE_SECONDS,
                 TimeUnit.SECONDS
         );
+    }
+
+    public void unbindListener() {
+        Log.d(MESSAGING_LOG_TAG, "Listener service is shutting down.");
+        receiveExecutor.shutdown();
+        receiveExecutor = null;
     }
 
     public void sendMessage(Handler handler, Message message) {
