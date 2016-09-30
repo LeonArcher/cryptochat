@@ -3,6 +3,9 @@ package com.streamdata.apps.cryptochat.models;
 import java.util.Date;
 
 public class Message {
+    // id to modify in database (as unique key)
+    public static final int EMPTY_ID = 0;
+
     private final int id;
     private final String text;
     private final Contact sender;

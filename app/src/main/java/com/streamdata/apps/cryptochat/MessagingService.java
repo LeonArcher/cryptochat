@@ -32,6 +32,7 @@ public class MessagingService {
     public static final int STATUS_SEND_MESSAGE_ERROR = 2;
 
     public static final String MESSAGING_LOG_TAG = "Messaging";
+    public static final String MESSAGING_JSON_LOG_TAG = "MessagingJSON";
 
     public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
     public static final int MESSAGES_POLLING_RATE_SECONDS = 5;
@@ -73,6 +74,8 @@ public class MessagingService {
             // download array with all messages for self contact
             String jData = Network.getJSON(requestUrl, Network.DEFAULT_TIMEOUT);
 
+            // TODO: send messages for handling in arrays, not one by one
+
             // parse JSON array and simultaneously handle messages
             try {
                 JSONArray jArray = new JSONArray(jData);
@@ -101,7 +104,8 @@ public class MessagingService {
 
                     // the receiver should always be self contact
                     if (!Objects.equals(receiverId, selfContact.getServerId())) {
-                        throw new AssertionError();
+                        Log.e(MESSAGING_LOG_TAG, null, new AssertionError());
+                        continue;
                     }
 
                     // only new messages from target contact should be processed
@@ -124,7 +128,7 @@ public class MessagingService {
                     lastMessageId = id;
                 }
             } catch (JSONException ex) {
-                Log.e("JSONException", null, ex);
+                Log.e(MESSAGING_JSON_LOG_TAG, null, ex);
             }
         }
 
@@ -146,7 +150,40 @@ public class MessagingService {
 
         @Override
         public void run() {
-            // TODO: implement sending procedure
+            // TODO: send message to database
+
+            // form the request string
+            final String requestUrl = String.format(
+                "%s/api/packages/",
+                MessagingService.WEB_SERVICE_URL
+            );
+
+            // TODO: encrypt the text
+            final String data = message.getText();
+
+            // create JSON object from message model
+            JSONObject jMessage = new JSONObject();
+            try {
+                jMessage.put("sender_id", message.getSender().getServerId());
+                jMessage.put("receiver_id", message.getReceiver().getServerId());
+                jMessage.put("data", data);
+
+            } catch (JSONException ex) {
+                Log.e(MESSAGING_JSON_LOG_TAG, null, ex);
+                handler.sendEmptyMessage(STATUS_SEND_MESSAGE_ERROR);
+                return;
+            }
+
+            // post json package
+            final String jString = jMessage.toString();
+            String result = Network.postJSON(requestUrl, Network.DEFAULT_TIMEOUT, jString);
+
+            // handle success and error results
+            if (result == null) {
+                handler.sendEmptyMessage(STATUS_SEND_MESSAGE_ERROR);
+            } else {
+                handler.sendEmptyMessage(STATUS_SEND_MESSAGE_SUCCESS);
+            }
         }
     }
 

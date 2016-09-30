@@ -1,20 +1,27 @@
 package com.streamdata.apps.cryptochat;
 
+import android.content.DialogInterface;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Objects;
+
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 
-public class MessageListActivity extends AppCompatActivity {
+public class MessageListActivity extends AppCompatActivity implements View.OnClickListener {
 
     // TODO: get message list, self contact and target contact from database
     Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
@@ -25,6 +32,7 @@ public class MessageListActivity extends AppCompatActivity {
 
     private BaseAdapter adapter;
     private ListView listView;
+    private EditText messageEditText;
 
     MessagingService messagingService;
     MessagingHandler messagingHandler;
@@ -133,10 +141,50 @@ public class MessageListActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_message_list);
 
+        // setup listView configuration
         float scale = getResources().getDisplayMetrics().density;
         adapter = new MessageListAdapter(this, messageList, scale);
         listView = (ListView) findViewById(R.id.msgListView);
         listView.setAdapter(adapter);
+
+        // setup sendMessageButton configuration
+        Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
+        sendMessageButton.setOnClickListener(this);
+
+        // map message edit text
+        messageEditText = (EditText) findViewById(R.id.messageEditText);
+    }
+
+    // handle send message event
+    @Override
+    public void onClick(View view) {
+        String text = messageEditText.getText().toString();
+
+        // ignore empty messages
+        if (Objects.equals(text, "")) {
+            return;
+        }
+
+        // prepare message
+        Message message = new Message(
+                Message.EMPTY_ID,
+                selfContact,
+                targetContact,
+                text,
+                new Date()
+        );
+
+        messagingService.sendMessage(messagingHandler, message);
+
+        // update message list
+        messageList.add(message);
+        adapter.notifyDataSetChanged();
+
+        // clear edit field
+        messageEditText.setText("");
+
+        // scroll down
+        listView.smoothScrollToPosition(adapter.getCount() - 1);
     }
 
     private static class MessagingHandler extends Handler {
@@ -157,7 +205,7 @@ public class MessageListActivity extends AppCompatActivity {
 
             switch (msg.what) {
                 case MessagingService.STATUS_NEW_MESSAGE:
-                    // TODO: handle message
+                    // get message object
                     Message message = (Message) msg.obj;
 
                     // update last received message id
@@ -177,9 +225,11 @@ public class MessageListActivity extends AppCompatActivity {
                     break;
                 case MessagingService.STATUS_SEND_MESSAGE_SUCCESS:
                     // TODO: handle successfully sent message
+                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sent successfully.");
                     break;
                 case MessagingService.STATUS_SEND_MESSAGE_ERROR:
                     // TODO: handle fail sent message
+                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sending error.");
                     break;
             }
         }
