@@ -4,11 +4,14 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -20,7 +23,8 @@ import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 
-public class MessageListActivity extends AppCompatActivity implements View.OnClickListener {
+public class MessageListActivity extends AppCompatActivity
+        implements View.OnClickListener, TextView.OnEditorActionListener {
 
     // TODO: get message list, self contact and target contact from database
     Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
@@ -63,6 +67,8 @@ public class MessageListActivity extends AppCompatActivity implements View.OnCli
 
         // map message edit text
         messageEditText = (EditText) findViewById(R.id.messageEditText);
+        messageEditText.setImeActionLabel("Send", KeyEvent.KEYCODE_ENTER);
+        messageEditText.setOnEditorActionListener(this);
     }
 
     @Override
@@ -79,9 +85,24 @@ public class MessageListActivity extends AppCompatActivity implements View.OnCli
         messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
     }
 
-    // handle send message event
+    // send message on button click
     @Override
     public void onClick(View view) {
+        sendMessage();
+    }
+
+    // send message on enter press
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        if (actionId == EditorInfo.IME_NULL) {
+            sendMessage();
+            return true;
+        }
+        return false;
+    }
+
+    // handle send message event
+    private void sendMessage() {
         String text = messageEditText.getText().toString();
 
         // ignore empty messages
