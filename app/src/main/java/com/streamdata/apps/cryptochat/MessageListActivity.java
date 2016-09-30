@@ -21,7 +21,7 @@ public class MessageListActivity extends AppCompatActivity {
     Contact targetContact = new Contact(1, "jack_slash", "Jack", null);
     ArrayList<Message> messageList = new ArrayList<>();
 
-    protected int lastMessageId;
+    private int lastMessageId;
 
     private BaseAdapter adapter;
     private ListView listView;
