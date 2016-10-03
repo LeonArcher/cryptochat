@@ -294,6 +294,12 @@ public class DBHandler extends SQLiteOpenHelper {
 
         db.close();
     }
+
+    public Contact getOwnerContact() {
+        int selfId = 0;
+
+        return getContact(selfId);
+    }
 }
 
 

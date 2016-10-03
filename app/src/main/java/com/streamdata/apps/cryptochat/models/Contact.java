@@ -7,8 +7,6 @@ import com.streamdata.apps.cryptochat.utils.Icon;
 
 public class Contact {
 
-    public static final int selfId = 0;
-
     private final int id;
     private final String serverId;
     private final String name;

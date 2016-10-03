@@ -23,13 +23,16 @@ public class MessageListAdapter extends BaseAdapter {
     private final ArrayList<Message> chatMessageList;
     private final float scaleScreen;
     private final static int messageIndent = 100;
+    private final Contact ownerContact;
 
-    public MessageListAdapter(Activity activity, ArrayList<Message> list, float scale) {
+    public MessageListAdapter(Activity activity, ArrayList<Message> list, float scale, Contact ownerContact) {
         chatMessageList = list;
         inflater = (LayoutInflater) activity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         scaleScreen = scale;
+
+        this.ownerContact = ownerContact;
     }
 
     private static class ViewHolder {
@@ -87,7 +90,7 @@ public class MessageListAdapter extends BaseAdapter {
         int pixels = (int) (messageIndent * scaleScreen);
 
         // if message is mine then align to right
-        if (message.getSender().getId() == Contact.selfId) {
+        if (message.getSender().getId() == ownerContact.getId()) {
             bubbleLayout.setBackgroundResource(R.drawable.chat_bubble_left);
             params.gravity = Gravity.START;
             params.setMarginEnd(pixels);

@@ -27,7 +27,8 @@ public class MessageListActivity extends AppCompatActivity
         implements View.OnClickListener, TextView.OnEditorActionListener {
 
     // TODO: get message list, self contact and target contact from database
-    Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null, "0");
+    Contact selfContact = new Contact(0, "alex45", "Alex", null, "0");
+    Contact ownerContact = new Contact(0, "alex45", "Alex", null, "0");
     Contact targetContact = new Contact(1, "jack_slash", "Jack", null, "0");
     ArrayList<Message> messageList = new ArrayList<>();
 
@@ -57,7 +58,7 @@ public class MessageListActivity extends AppCompatActivity
 
         // setup listView configuration
         float scale = getResources().getDisplayMetrics().density;
-        adapter = new MessageListAdapter(this, messageList, scale);
+        adapter = new MessageListAdapter(this, messageList, scale, ownerContact);
         listView = (ListView) findViewById(R.id.msgListView);
         listView.setAdapter(adapter);
 
