@@ -29,16 +29,16 @@ public class ContactListActivity extends AppCompatActivity {
 
         // fill mock contacts array
         Resources resources = getResources();
-        mockContacts.add(new Contact(0, "Alex",
+        mockContacts.add(new Contact(1, "alex45", "Alex",
                 new ResourceIcon(resources, R.drawable.male_icon), "0"));
-        mockContacts.add(new Contact(1, "John",
-                new ResourceIcon(resources, R.drawable.santa_icon), "1"));
-        mockContacts.add(new Contact(2, "Jane",
-                new ResourceIcon(resources, R.drawable.female_icon), "2"));
-        mockContacts.add(new Contact(3, "Henry",
-                new ResourceIcon(resources, R.drawable.gentleman_icon), "3"));
-        mockContacts.add(new Contact(4, "Liza",
-                new ResourceIcon(resources, R.drawable.lady_icon), "4"));
+        mockContacts.add(new Contact(2, "john_s", "John",
+                new ResourceIcon(resources, R.drawable.santa_icon), "0"));
+        mockContacts.add(new Contact(3, "jane_f5", "Jane",
+                new ResourceIcon(resources, R.drawable.female_icon), "0"));
+        mockContacts.add(new Contact(4, "mr_henry_ford", "Henry",
+                new ResourceIcon(resources, R.drawable.gentleman_icon), "0"));
+        mockContacts.add(new Contact(5, "elizabeth_2", "Liza",
+                new ResourceIcon(resources, R.drawable.lady_icon), "0"));
 
         // create list view and apply custom contacts adapter
         ListView lvContacts = (ListView) findViewById(R.id.listView);

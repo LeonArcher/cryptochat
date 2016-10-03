@@ -28,15 +28,15 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     // Database Name
     private static final String DATABASE_NAME = "DB";
-    // Contacts table name
+    // Table name
     private static final String TABLE_CONTACT = "Contact";
     private static final String TABLE_MESSAGE = "Message";
-    // Shops Table Contacts names
+    // Contacts Table Contacts names
     private static final String KEY_CONTACT_ID = "id";
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
     private static final String KEY_PUBLIC_KEY= "public_key";
-    // Shops Table Messages names
+    // Table Messages names
     private static final String KEY_MESSAGE_ID = "id";
     private static final String KEY_TEXT = "text";
     private static final String KEY_DATE = "date";
@@ -108,6 +108,7 @@ public class DBHandler extends SQLiteOpenHelper {
         // Achtung! Посмтореть как правильно обработать
 
         Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
+                "Achtung",
                 cursor.getString(cursor.getColumnIndex("name")),
                 new DataIcon(cursor.getBlob(cursor.getColumnIndex("icon"))),
                 cursor.getString(cursor.getColumnIndex("public_key")));
@@ -123,8 +124,8 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_MESSAGE_ID, message.getId());
-        values.put(KEY_SENDER_ID, message.getSenderId());
-        values.put(KEY_RECEIVER_ID, message.getSenderId());
+        values.put(KEY_SENDER_ID, message.getSender().getId());
+        values.put(KEY_RECEIVER_ID, message.getReceiver().getId());
         values.put(KEY_DATE, DateUtils.dateToString(message.getDate()));
         values.put(KEY_TEXT, message.getText());
 
@@ -144,9 +145,16 @@ public class DBHandler extends SQLiteOpenHelper {
             cursor.moveToFirst();
 
         // Achtung! Посмтореть как правильно обработать
+
+        //  Make sender and receiver contact
+        Contact sender = this.getContact(Integer.parseInt
+                (cursor.getString(cursor.getColumnIndex("sender_id"))));
+        Contact receiver = this.getContact(Integer.parseInt
+                (cursor.getString(cursor.getColumnIndex("receiver_id"))));
+
         Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
+                sender,
+                receiver,
                 DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
                 cursor.getString(cursor.getColumnIndex("text")));
 
@@ -166,9 +174,16 @@ public class DBHandler extends SQLiteOpenHelper {
         // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
+
+                //  Make sender and receiver contact
+                Contact sender = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
+                Contact receiver = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
+
                 Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
+                        sender,
+                        receiver,
                         DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
                         cursor.getString(cursor.getColumnIndex("text")));
 
@@ -194,9 +209,15 @@ public class DBHandler extends SQLiteOpenHelper {
         // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
+                //  Make sender and receiver contact
+                Contact sender = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
+                Contact receiver = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
+
                 Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
+                        sender,
+                        receiver,
                         DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
                         cursor.getString(cursor.getColumnIndex("text")));
 
@@ -223,9 +244,15 @@ public class DBHandler extends SQLiteOpenHelper {
         // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
+                //  Make sender and receiver contact
+                Contact sender = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
+                Contact receiver = this.getContact(Integer.parseInt
+                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
+
                 Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                        Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
+                        sender,
+                        receiver,
                         DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
                         cursor.getString(cursor.getColumnIndex("text")));
 
