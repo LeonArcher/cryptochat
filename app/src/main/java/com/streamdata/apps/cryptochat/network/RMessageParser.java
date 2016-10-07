@@ -1,6 +1,5 @@
 package com.streamdata.apps.cryptochat.network;
 
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.streamdata.apps.cryptochat.models.RMessage;
@@ -14,7 +13,7 @@ import org.json.JSONObject;
 public class RMessageParser implements Parser<RMessage> {
 
     @Override
-    @Nullable public RMessage parse(String data) {
+    public RMessage parse(String data) {
         RMessage message;
 
         try {
@@ -30,9 +29,26 @@ public class RMessageParser implements Parser<RMessage> {
 
         } catch (JSONException ex) {
             Log.e(PARSER_LOG_TAG, null, ex);
-            return null;
+            throw new RuntimeException(ex);
         }
 
         return message;
+    }
+
+    @Override
+    public String json(RMessage message) {
+        JSONObject jMessage = new JSONObject();
+
+        try {
+            jMessage.put("sender_id", message.getSenderId());
+            jMessage.put("receiver_id", message.getReceiverId());
+            jMessage.put("data", message.getData());
+
+        } catch (JSONException ex) {
+            Log.e(PARSER_LOG_TAG, null, ex);
+            throw new RuntimeException(ex);
+        }
+
+        return jMessage.toString();
     }
 }
