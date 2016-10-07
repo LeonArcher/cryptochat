@@ -6,6 +6,7 @@ import android.util.Log;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.models.RMessage;
+import com.streamdata.apps.cryptochat.network.NetworkDataLayer;
 import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
 import com.streamdata.apps.cryptochat.utils.MessageAdapter;
 
@@ -35,7 +36,43 @@ public class MessagingService {
     private ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService receiveExecutor = null;
 
-    private final NetworkObjectLayer network = new NetworkObjectLayer();
+    // network-level layers
+    private final NetworkDataLayer networkDataLayer;
+    private final NetworkObjectLayer network;
+
+    public MessagingService() {
+
+        // init network
+        networkDataLayer = new NetworkDataLayer();
+        network = new NetworkObjectLayer(networkDataLayer);
+    }
+
+    public void bindListener(Handler handler, Contact selfContact, Contact targetContact,
+                             int lastMessageId) {
+        // unbind listener first before creating a new one
+        if (receiveExecutor != null) {
+            unbindListener();
+        }
+
+        Log.d(MESSAGING_LOG_TAG, "Listener binding procedure initiated.");
+        receiveExecutor = Executors.newSingleThreadScheduledExecutor();
+        receiveExecutor.scheduleAtFixedRate(
+                new MessageListenerJob(handler, selfContact, targetContact, lastMessageId, network),
+                0,
+                MESSAGES_POLLING_RATE_SECONDS,
+                TimeUnit.SECONDS
+        );
+    }
+
+    public void unbindListener() {
+        Log.d(MESSAGING_LOG_TAG, "Listener service is shutting down.");
+        receiveExecutor.shutdown();
+        receiveExecutor = null;
+    }
+
+    public void sendMessage(Handler handler, Message message) {
+        sendExecutor.execute(new MessageSenderJob(handler, message, network));
+    }
 
     private static class MessageListenerJob implements Runnable {
 
@@ -150,32 +187,5 @@ public class MessagingService {
             // send success callback
             handler.sendEmptyMessage(STATUS_SEND_MESSAGE_SUCCESS);
         }
-    }
-
-    public void bindListener(Handler handler, Contact selfContact, Contact targetContact,
-                             int lastMessageId) {
-        // unbind listener first before creating a new one
-        if (receiveExecutor != null) {
-            unbindListener();
-        }
-
-        Log.d(MESSAGING_LOG_TAG, "Listener binding procedure initiated.");
-        receiveExecutor = Executors.newSingleThreadScheduledExecutor();
-        receiveExecutor.scheduleAtFixedRate(
-                new MessageListenerJob(handler, selfContact, targetContact, lastMessageId, network),
-                0,
-                MESSAGES_POLLING_RATE_SECONDS,
-                TimeUnit.SECONDS
-        );
-    }
-
-    public void unbindListener() {
-        Log.d(MESSAGING_LOG_TAG, "Listener service is shutting down.");
-        receiveExecutor.shutdown();
-        receiveExecutor = null;
-    }
-
-    public void sendMessage(Handler handler, Message message) {
-        sendExecutor.execute(new MessageSenderJob(handler, message, network));
     }
 }

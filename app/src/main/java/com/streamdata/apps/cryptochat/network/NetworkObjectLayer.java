@@ -20,7 +20,12 @@ public class NetworkObjectLayer {
 
     // init helpers
     private final RMessageParser messageParser = new RMessageParser();
-    private final NetworkDataLayer networkDataLayer = new NetworkDataLayer();
+    private final NetworkDataLayer networkDataLayer;
+
+    // network object layer is deployed on existing network data layer
+    public NetworkObjectLayer(NetworkDataLayer networkDataLayer) {
+        this.networkDataLayer = networkDataLayer;
+    }
 
     public ArrayList<RMessage> getMessages(String receiverId) throws IOException, JSONException {
 
