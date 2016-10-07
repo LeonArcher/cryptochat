@@ -23,8 +23,7 @@ public class Network {
     public static final int DEFAULT_TIMEOUT = 5000;
     public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
 
-    @Nullable
-    public static String getJSON(String url, int timeout) {
+    @Nullable public static String getJSON(String url, int timeout) {
         HttpURLConnection connection = null;
         try {
             // setup and process connection
@@ -70,8 +69,7 @@ public class Network {
         return null;
     }
 
-    @Nullable
-    public static String postJSON(String url, int timeout, String jObject) {
+    @Nullable public static String postJSON(String url, int timeout, String jObject) {
         StringBuilder sb = new StringBuilder();
 
         HttpURLConnection connection = null;

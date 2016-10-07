@@ -5,8 +5,6 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
-import com.streamdata.apps.cryptochat.MessageListActivity;
-
 import java.lang.ref.WeakReference;
 
 /**
