@@ -9,7 +9,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
- * TODO: Add a class header comment!
+ * Class for get/post network operations handle
  */
 public class NetworkDataLayer {
 

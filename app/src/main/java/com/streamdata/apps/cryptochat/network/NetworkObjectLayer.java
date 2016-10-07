@@ -12,12 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 /**
- * TODO: Add a class header comment!
+ * Class for REST web service connection and network objects operations
  */
 public class NetworkObjectLayer {
     public static final String NETWORK_OL_LOG_TAG = "NetworkObjectLayer";
-
-    public static final int DEFAULT_TIMEOUT = 5000;
     public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
 
     // init helpers
