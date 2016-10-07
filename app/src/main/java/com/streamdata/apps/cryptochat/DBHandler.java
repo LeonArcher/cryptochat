@@ -116,7 +116,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Inserting Row
         db.insert(TABLE_CONTACT, null, values);
-        db.close(); // Closing database connection
     }
 
     // Getting Contact by id
@@ -140,7 +139,6 @@ public class DBHandler extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndex("public_key")));
 
         cursor.close();
-        db.close();
 
         return contact;
     }
@@ -158,7 +156,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Inserting Row
         db.insert(TABLE_MESSAGE, null, values);
-        db.close(); // Closing database connection
     }
 
     // Getting one message
@@ -188,7 +185,6 @@ public class DBHandler extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndex("text")));
 
         cursor.close();
-        db.close();
         return message;
     }
 
@@ -225,7 +221,6 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         cursor.close();
-        db.close();
         // Return message list
         return messageList;
     }
@@ -261,7 +256,6 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         cursor.close();
-        db.close();
         // Return message list
         return messageList;
     }
@@ -299,7 +293,6 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         cursor.close();
-        db.close();
         // Return message list
         return messageList;
     }
@@ -310,12 +303,11 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         db.delete(TABLE_MESSAGE, String.format(Locale.US, "%s = ?", KEY_MESSAGE_ID),
                 new String[] { String.valueOf(id)});
-        db.close();
     }
 
     // Deleting a talk
     public void deleteTalk(int senderId, int receiverId) {
-        Log.d("DataBase", "Delete talk by sender and receiverId");
+        Log.d("DataBase", "Delete talk by senderId and receiverId");
         SQLiteDatabase db = getWritableDatabase();
 
         String deleteQuery = String.format(Locale.US, "%s =? AND %s =?",
@@ -323,8 +315,6 @@ public class DBHandler extends SQLiteOpenHelper {
                                                         KEY_RECEIVER_ID);
         db.delete(TABLE_MESSAGE, deleteQuery,
                 new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
-
-        db.close();
     }
 
     // Deleting message older 1 day
@@ -337,8 +327,6 @@ public class DBHandler extends SQLiteOpenHelper {
                                                                                 TABLE_MESSAGE,
                                                                                 KEY_DATE);
         db.execSQL(sql);
-
-        db.close();
     }
 
     public Contact getOwnerContact() {
