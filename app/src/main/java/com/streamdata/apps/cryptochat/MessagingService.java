@@ -22,9 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by Leon Archer on 29.09.2016.
- */
+
 public class MessagingService {
 
     public static final int STATUS_NEW_MESSAGES = 0;
@@ -34,7 +32,6 @@ public class MessagingService {
     public static final String MESSAGING_LOG_TAG = "Messaging";
     public static final String MESSAGING_JSON_LOG_TAG = "MessagingJSON";
 
-    public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
     public static final int MESSAGES_POLLING_RATE_SECONDS = 5;
 
     private ExecutorService sendExecutor = Executors.newSingleThreadExecutor();
@@ -60,11 +57,7 @@ public class MessagingService {
             this.selfContact = selfContact;
             this.targetContact = targetContact;
 
-            requestUrl = String.format(
-                    "%s/api/packages/%s",
-                    MessagingService.WEB_SERVICE_URL,
-                    selfContact.getServerId()
-            );
+            requestUrl = Network.getReceiveMessageRequestUrl(selfContact.getServerId());
         }
 
         @Override
@@ -158,10 +151,7 @@ public class MessagingService {
             // TODO: send message to database
 
             // form the request string
-            final String requestUrl = String.format(
-                "%s/api/packages/",
-                MessagingService.WEB_SERVICE_URL
-            );
+            final String requestUrl = Network.getSendMessageRequestUrl();
 
             // TODO: encrypt the text
             final String data = message.getText();

@@ -5,9 +5,6 @@ import android.graphics.Bitmap;
 import com.streamdata.apps.cryptochat.utils.Icon;
 
 
-/**
- * Created by Leon Archer on 12.09.2016.
- */
 public class Contact {
 
     public static final int selfId = 0;

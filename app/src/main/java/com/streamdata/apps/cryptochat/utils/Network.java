@@ -15,11 +15,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Created by Leon Archer on 30.09.2016.
+ * Network connection handling class
  */
 public class Network {
     public static final String NETWORK_LOG_TAG = "Network";
+
     public static final int DEFAULT_TIMEOUT = 5000;
+    public static final String WEB_SERVICE_URL = "http://crypto-chat.azurewebsites.net/";
 
     @Nullable
     public static String getJSON(String url, int timeout) {
@@ -83,7 +85,6 @@ public class Network {
             connection.setConnectTimeout(timeout);
             connection.setReadTimeout(timeout);
             connection.setRequestProperty("Content-Type","application/json");
-//            connection.setRequestProperty("Host", "android.schoolportal.gr");
             connection.connect();
 
             // send JSON object to output stream
@@ -121,5 +122,20 @@ public class Network {
         }
 
         return null;
+    }
+
+    public static String getReceiveMessageRequestUrl(String id) {
+        return String.format(
+                "%s/api/packages/%s",
+                WEB_SERVICE_URL,
+                id
+        );
+    }
+
+    public static String getSendMessageRequestUrl() {
+        return String.format(
+                "%s/api/packages/",
+                WEB_SERVICE_URL
+        );
     }
 }
