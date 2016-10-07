@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 @WorkerThread
@@ -49,16 +50,23 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Table Create Statements
     // Contact table create statement
-    private static final String CREATE_TABLE_CONTACT = "CREATE TABLE "
-            + TABLE_CONTACT + "(" + KEY_CONTACT_ID + " INTEGER PRIMARY KEY," + KEY_NAME
-            + " TEXT," + KEY_ICON + " BLOB," + KEY_PUBLIC_KEY
-            + " TEXT" + ")";
+    private static final String CREATE_TABLE_CONTACT =
+            String.format("CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s  TEXT, %s BLOB, %s TEXT)",
+                                                                                TABLE_CONTACT,
+                                                                                KEY_CONTACT_ID,
+                                                                                KEY_NAME,
+                                                                                KEY_ICON,
+                                                                                KEY_PUBLIC_KEY);
 
     // Message table create statement
-    private static final String CREATE_TABLE_MESSAGE = "CREATE TABLE "
-            + TABLE_MESSAGE + "(" + KEY_MESSAGE_ID + " INTEGER PRIMARY KEY," + KEY_TEXT
-            + " TEXT," + KEY_DATE + "  DATETIME," + KEY_SENDER_ID
-            + " INTEGER," + KEY_RECEIVER_ID + " INTEGER" + ")";
+    private static final String CREATE_TABLE_MESSAGE =
+            String.format("CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
+                                                                                TABLE_MESSAGE,
+                                                                                KEY_MESSAGE_ID,
+                                                                                KEY_TEXT,
+                                                                                KEY_DATE,
+                                                                                KEY_SENDER_ID,
+                                                                                KEY_RECEIVER_ID);
 
     public DBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -79,14 +87,15 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Upgrade DataBase");
 
         if (newVersion <= oldVersion) {
-            IllegalArgumentException ex = new IllegalArgumentException(newVersion + " <= " + oldVersion);
+            String exceptionMessage = String.format(Locale.US,"%d <= %d", newVersion, oldVersion);
+            IllegalArgumentException ex = new IllegalArgumentException(exceptionMessage);
             Log.e("DataBase", "", ex);
             throw ex;
         }
 
         // on upgrade drop older tables
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACT);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_MESSAGE);
+        db.execSQL(String.format(Locale.US,"DROP TABLE IF EXISTS %s", TABLE_CONTACT));
+        db.execSQL(String.format(Locale.US,"DROP TABLE IF EXISTS %s", TABLE_MESSAGE));
 
         // create new tables
         onCreate(db);
@@ -116,12 +125,13 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_CONTACT, new String[] { KEY_CONTACT_ID,
-                        KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY}, KEY_CONTACT_ID + " =? ",
+                        KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY},
+                        String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
                         new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
 
-        // Achtung! Посмтореть как правильно обработать
+        // TODO: Посмтореть как правильно обработать
 
         Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
                 "Achtung",
@@ -157,12 +167,13 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_MESSAGE, new String[] { KEY_MESSAGE_ID,
-                        KEY_SENDER_ID, KEY_RECEIVER_ID, KEY_DATE, KEY_TEXT}, KEY_MESSAGE_ID + " =? ",
+                        KEY_SENDER_ID, KEY_RECEIVER_ID, KEY_DATE, KEY_TEXT},
+                        String.format(Locale.US,"%s  =?", KEY_MESSAGE_ID),
                         new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
 
-        // Achtung! Посмтореть как правильно обработать
+        // TODO: Посмтореть как правильно обработать
 
         //  Make sender and receiver contact
         Contact sender = getContact(Integer.parseInt
@@ -186,8 +197,10 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
-        String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
-                KEY_SENDER_ID + " =? ";
+
+
+        String selectQuery = String.format(Locale.US,"SELECT * FROM %s WHERE %s =?",
+                                                        TABLE_MESSAGE, KEY_SENDER_ID);
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId) });
         // Looping through all rows and adding to list
@@ -222,8 +235,9 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
-        String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
-                KEY_RECEIVER_ID + "=?";
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s WHERE %s =?",
+                                                                    TABLE_MESSAGE,
+                                                                    KEY_RECEIVER_ID);
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(receiverId) });
         // Looping through all rows and adding to list
@@ -257,9 +271,11 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
-        String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
-                KEY_SENDER_ID + "=? AND " +
-                KEY_RECEIVER_ID + "=?";
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s WHERE %s =? AND %s =?",
+                                                                                TABLE_MESSAGE,
+                                                                                KEY_SENDER_ID,
+                                                                                KEY_RECEIVER_ID);
+
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
         // Looping through all rows and adding to list
@@ -292,7 +308,7 @@ public class DBHandler extends SQLiteOpenHelper {
     public void deleteMessage(int id) {
         Log.d("DataBase", "Delete Message by id");
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_MESSAGE, KEY_MESSAGE_ID + " = ?",
+        db.delete(TABLE_MESSAGE, String.format(Locale.US, "%s = ?", KEY_MESSAGE_ID),
                 new String[] { String.valueOf(id)});
         db.close();
     }
@@ -301,7 +317,10 @@ public class DBHandler extends SQLiteOpenHelper {
     public void deleteTalk(int senderId, int receiverId) {
         Log.d("DataBase", "Delete talk by sender and receiverId");
         SQLiteDatabase db = getWritableDatabase();
-        String deleteQuery = KEY_SENDER_ID + "=? AND " + KEY_RECEIVER_ID + "=?";
+
+        String deleteQuery = String.format(Locale.US, "%s =? AND %s =?",
+                                                        KEY_SENDER_ID,
+                                                        KEY_RECEIVER_ID);
         db.delete(TABLE_MESSAGE, deleteQuery,
                 new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
 
@@ -313,14 +332,17 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Delete all Messages");
         SQLiteDatabase db = getWritableDatabase();
 
-        String sql = "DELETE FROM " + TABLE_MESSAGE + " WHERE " + KEY_DATE + " <= date('now','-1 day')";
+
+        String sql = String.format(Locale.US, "DELETE FROM %s WHERE %s <= date('now','-1 day')",
+                                                                                TABLE_MESSAGE,
+                                                                                KEY_DATE);
         db.execSQL(sql);
 
         db.close();
     }
 
     public Contact getOwnerContact() {
-        Log.d("DataBase", "Get contact of Owner");
+        Log.d("DataBase", "Get the contact of the Owner");
         int selfId = 0;
 
         return getContact(selfId);
