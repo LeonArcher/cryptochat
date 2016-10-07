@@ -10,6 +10,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.WorkerThread;
+import android.util.Log;
 
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+
+@WorkerThread
 public class DBHandler extends SQLiteOpenHelper {
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -62,14 +66,24 @@ public class DBHandler extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
+        Log.d("DataBase", "Create DataBase");
         // creating required tables
         db.execSQL(CREATE_TABLE_CONTACT);
         db.execSQL(CREATE_TABLE_MESSAGE);
+
+        Log.d("DataBase", "DataBase has created");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.d("DataBase", "Upgrade DataBase");
+
+        if (newVersion <= oldVersion) {
+            IllegalArgumentException ex = new IllegalArgumentException(newVersion + " <= " + oldVersion);
+            Log.e("DataBase", "", ex);
+            throw ex;
+        }
+
         // on upgrade drop older tables
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACT);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_MESSAGE);
@@ -80,6 +94,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Adding new Contact
     public void addContact(Contact contact) {
+        Log.d("DataBase", "Add Contact to DataBase");
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_CONTACT_ID, contact.getId());
@@ -97,6 +112,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting Contact by id
     public Contact getContact(int id) {
+        Log.d("DataBase", "Get Contact from DataBase by id");
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_CONTACT, new String[] { KEY_CONTACT_ID,
@@ -121,6 +137,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Adding new Message
     public void addMessage(Message message) {
+        Log.d("DataBase", "Add Message to DataBase");
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(KEY_MESSAGE_ID, message.getId());
@@ -136,6 +153,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting one message
     public Message getMessage(int id) {
+        Log.d("DataBase", "Get Message from DataBase by id");
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_MESSAGE, new String[] { KEY_MESSAGE_ID,
@@ -165,6 +183,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by senderId
     public List<Message> getAllMessageBySenderId(int senderId) {
+        Log.d("DataBase", "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
         String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
@@ -200,6 +219,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by receiverId
     public List<Message> getAllMessageByReceiverId(int receiverId) {
+        Log.d("DataBase", "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
         String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
@@ -234,6 +254,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message of a talk
     public List<Message> getAllMessageOfTalk(int senderId, int receiverId) {
+        Log.d("DataBase", "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
         String selectQuery = "SELECT * FROM " + TABLE_MESSAGE + " WHERE " +
@@ -269,6 +290,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Deleting a message
     public void deleteMessage(int id) {
+        Log.d("DataBase", "Delete Message by id");
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_MESSAGE, KEY_MESSAGE_ID + " = ?",
                 new String[] { String.valueOf(id)});
@@ -277,6 +299,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Deleting a talk
     public void deleteTalk(int senderId, int receiverId) {
+        Log.d("DataBase", "Delete talk by sender and receiverId");
         SQLiteDatabase db = this.getWritableDatabase();
         String deleteQuery = KEY_SENDER_ID + "=? AND " + KEY_RECEIVER_ID + "=?";
         db.delete(TABLE_MESSAGE, deleteQuery,
@@ -287,6 +310,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Deleting message older 1 day
     public void deleteOldMessages() {
+        Log.d("DataBase", "Delete all Messages");
         SQLiteDatabase db = this.getWritableDatabase();
 
         String sql = "DELETE FROM " + TABLE_MESSAGE + " WHERE " + KEY_DATE + " <= date('now','-1 day')";
@@ -296,6 +320,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     public Contact getOwnerContact() {
+        Log.d("DataBase", "Get contact of Owner");
         int selfId = 0;
 
         return getContact(selfId);
