@@ -144,15 +144,18 @@ public class DBHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
-        // Looping through all rows and adding to list
-        if (cursor.moveToFirst()) {
-            do {
-                Contact contact = cursorToContact(cursor);
 
-                // Adding message to list
-                contactList.add(contact);
-            } while (cursor.moveToNext());
+        if (cursor.moveToFirst()) {
+            return null;
         }
+
+        // Looping through all rows and adding to list
+        do {
+            Contact contact = cursorToContact(cursor);
+
+            // Adding message to list
+            contactList.add(contact);
+        } while (cursor.moveToNext());
 
         cursor.close();
         // Return message list
@@ -192,6 +195,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting All Message by senderId
+    @Nullable
     public List<Message> getAllMessageBySenderId(int senderId) {
         Log.d("DataBase", "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<Message>();
@@ -201,16 +205,17 @@ public class DBHandler extends SQLiteOpenHelper {
                                                         TABLE_MESSAGE, KEY_SENDER_ID);
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId) });
-        // Looping through all rows and adding to list
+
         if (cursor.moveToFirst()) {
-            do {
-
-                Message message = cursorToMessage(cursor);
-
-                // Adding message to list
-                messageList.add(message);
-            } while (cursor.moveToNext());
+            return null;
         }
+
+        // Looping through all rows and adding to list
+        do {
+            Message message = cursorToMessage(cursor);
+            // Adding message to list
+            messageList.add(message);
+        } while (cursor.moveToNext());
 
         cursor.close();
         // Return message list
@@ -218,6 +223,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting All Message by receiverId
+    @Nullable
     public List<Message> getAllMessageByReceiverId(int receiverId) {
         Log.d("DataBase", "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<Message>();
@@ -227,16 +233,17 @@ public class DBHandler extends SQLiteOpenHelper {
                                                                     KEY_RECEIVER_ID);
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(receiverId) });
-        // Looping through all rows and adding to list
+
         if (cursor.moveToFirst()) {
-            do {
-
-                Message message = cursorToMessage(cursor);
-
-                // Adding message to list
-                messageList.add(message);
-            } while (cursor.moveToNext());
+            return null;
         }
+
+        // Looping through all rows and adding to list
+        do {
+            Message message = cursorToMessage(cursor);
+            // Adding message to list
+            messageList.add(message);
+        } while (cursor.moveToNext());
 
         cursor.close();
         // Return message list
@@ -244,6 +251,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting All Message of a talk
+    @Nullable
     public List<Message> getAllMessageOfTalk(int senderId, int receiverId) {
         Log.d("DataBase", "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<Message>();
@@ -255,16 +263,16 @@ public class DBHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
-        // Looping through all rows and adding to list
+
         if (cursor.moveToFirst()) {
-            do {
-
-                Message message = cursorToMessage(cursor);
-
-                // Adding message to list
-                messageList.add(message);
-            } while (cursor.moveToNext());
+           return null;
         }
+        // Looping through all rows and adding to list
+        do {
+            Message message = cursorToMessage(cursor);
+            // Adding message to list
+            messageList.add(message);
+        } while (cursor.moveToNext());
 
         cursor.close();
         // Return message list
@@ -272,6 +280,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting All Message by receiverId
+    @Nullable
     public List<Message> getAllMessage() {
         Log.d("DataBase", "Get all message from DataBase");
         List<Message> messageList = new ArrayList<Message>();
@@ -281,16 +290,16 @@ public class DBHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
-        // Looping through all rows and adding to list
+
         if (cursor.moveToFirst()) {
-            do {
-
-                Message message = cursorToMessage(cursor);
-
-                // Adding message to list
-                messageList.add(message);
-            } while (cursor.moveToNext());
+            return null;
         }
+        // Looping through all rows and adding to list
+        do {
+            Message message = cursorToMessage(cursor);
+            // Adding message to list
+            messageList.add(message);
+        } while (cursor.moveToNext());
 
         cursor.close();
         // Return message list
@@ -321,7 +330,6 @@ public class DBHandler extends SQLiteOpenHelper {
     public void deleteOldMessages() {
         Log.d("DataBase", "Delete all Messages");
         SQLiteDatabase db = getWritableDatabase();
-
 
         String sql = String.format(Locale.US, "DELETE FROM %s WHERE %s <= date('now','-1 day')",
                                                                                 TABLE_MESSAGE,
