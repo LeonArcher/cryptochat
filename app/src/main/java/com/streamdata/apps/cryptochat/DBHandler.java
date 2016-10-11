@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
 
@@ -38,6 +39,7 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String TABLE_MESSAGE = "Message";
     // Contacts Table Contacts names
     private static final String KEY_CONTACT_ID = "id";
+    private static final String KEY_SERVER_ID = "serverId";
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
     private static final String KEY_PUBLIC_KEY= "public_key";
@@ -51,9 +53,10 @@ public class DBHandler extends SQLiteOpenHelper {
     // Table Create Statements
     // Contact table create statement
     private static final String CREATE_TABLE_CONTACT =
-            String.format("CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s  TEXT, %s BLOB, %s TEXT)",
+            String.format("CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
                                                                                 TABLE_CONTACT,
                                                                                 KEY_CONTACT_ID,
+                                                                                KEY_SERVER_ID,
                                                                                 KEY_NAME,
                                                                                 KEY_ICON,
                                                                                 KEY_PUBLIC_KEY);
@@ -94,8 +97,8 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         // on upgrade drop older tables
-        db.execSQL(String.format(Locale.US,"DROP TABLE IF EXISTS %s", TABLE_CONTACT));
-        db.execSQL(String.format(Locale.US,"DROP TABLE IF EXISTS %s", TABLE_MESSAGE));
+        db.execSQL(String.format(Locale.US, "DROP TABLE IF EXISTS %s", TABLE_CONTACT));
+        db.execSQL(String.format(Locale.US, "DROP TABLE IF EXISTS %s", TABLE_MESSAGE));
 
         // create new tables
         onCreate(db);
@@ -105,20 +108,14 @@ public class DBHandler extends SQLiteOpenHelper {
     public void addContact(Contact contact) {
         Log.d("DataBase", "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(KEY_CONTACT_ID, contact.getId());
-        values.put(KEY_NAME, contact.getName());
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, bos);
-        values.put(KEY_ICON, bos.toByteArray());
-        values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
+        ContentValues values = contactToContentValues(contact);
 
         // Inserting Row
         db.insert(TABLE_CONTACT, null, values);
     }
 
     // Getting Contact by id
+    @Nullable
     public Contact getContact(int id) {
         Log.d("DataBase", "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
@@ -127,38 +124,53 @@ public class DBHandler extends SQLiteOpenHelper {
                         KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY},
                         String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
                         new String[] { String.valueOf(id) }, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
 
-        // TODO: Посмтореть как правильно обработать
+        if (!cursor.moveToFirst()) {
+            return null;
+        }
 
-        Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                "Achtung",
-                cursor.getString(cursor.getColumnIndex("name")),
-                new DataIcon(cursor.getBlob(cursor.getColumnIndex("icon"))),
-                cursor.getString(cursor.getColumnIndex("public_key")));
-
+        Contact contact = cursorToContact(cursor);
         cursor.close();
 
         return contact;
+    }
+
+    public List<Contact> getAllContact() {
+        Log.d("DataBase", "Get all Contacts from DataBase");
+        List<Contact> contactList = new ArrayList<Contact>();
+        // Select All Query
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s",
+                TABLE_CONTACT);
+
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
+        // Looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+                Contact contact = cursorToContact(cursor);
+
+                // Adding message to list
+                contactList.add(contact);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        // Return message list
+        return contactList;
     }
 
     // Adding new Message
     public void addMessage(Message message) {
         Log.d("DataBase", "Add Message to DataBase");
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(KEY_MESSAGE_ID, message.getId());
-        values.put(KEY_SENDER_ID, message.getSender().getId());
-        values.put(KEY_RECEIVER_ID, message.getReceiver().getId());
-        values.put(KEY_DATE, DateUtils.dateToString(message.getDate()));
-        values.put(KEY_TEXT, message.getText());
+        ContentValues values = messageToContentValues(message);
 
         // Inserting Row
         db.insert(TABLE_MESSAGE, null, values);
     }
 
     // Getting one message
+    @Nullable
     public Message getMessage(int id) {
         Log.d("DataBase", "Get Message from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
@@ -167,22 +179,13 @@ public class DBHandler extends SQLiteOpenHelper {
                         KEY_SENDER_ID, KEY_RECEIVER_ID, KEY_DATE, KEY_TEXT},
                         String.format(Locale.US,"%s  =?", KEY_MESSAGE_ID),
                         new String[] { String.valueOf(id) }, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
 
-        // TODO: Посмтореть как правильно обработать
+        if (!cursor.moveToFirst()) {
+            return null;
+        }
 
         //  Make sender and receiver contact
-        Contact sender = getContact(Integer.parseInt
-                (cursor.getString(cursor.getColumnIndex("sender_id"))));
-        Contact receiver = getContact(Integer.parseInt
-                (cursor.getString(cursor.getColumnIndex("receiver_id"))));
-
-        Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                sender,
-                receiver,
-                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                cursor.getString(cursor.getColumnIndex("text")));
+        Message message = cursorToMessage(cursor);
 
         cursor.close();
         return message;
@@ -192,9 +195,8 @@ public class DBHandler extends SQLiteOpenHelper {
     public List<Message> getAllMessageBySenderId(int senderId) {
         Log.d("DataBase", "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<Message>();
+
         // Select All Query
-
-
         String selectQuery = String.format(Locale.US,"SELECT * FROM %s WHERE %s =?",
                                                         TABLE_MESSAGE, KEY_SENDER_ID);
         SQLiteDatabase db = getWritableDatabase();
@@ -203,17 +205,7 @@ public class DBHandler extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             do {
 
-                //  Make sender and receiver contact
-                Contact sender = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
-                Contact receiver = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
-
-                Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        sender,
-                        receiver,
-                        DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                        cursor.getString(cursor.getColumnIndex("text")));
+                Message message = cursorToMessage(cursor);
 
                 // Adding message to list
                 messageList.add(message);
@@ -238,17 +230,8 @@ public class DBHandler extends SQLiteOpenHelper {
         // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
-                //  Make sender and receiver contact
-                Contact sender = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
-                Contact receiver = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
 
-                Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        sender,
-                        receiver,
-                        DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                        cursor.getString(cursor.getColumnIndex("text")));
+                Message message = cursorToMessage(cursor);
 
                 // Adding message to list
                 messageList.add(message);
@@ -275,17 +258,34 @@ public class DBHandler extends SQLiteOpenHelper {
         // Looping through all rows and adding to list
         if (cursor.moveToFirst()) {
             do {
-                //  Make sender and receiver contact
-                Contact sender = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("sender_id"))));
-                Contact receiver = getContact(Integer.parseInt
-                        (cursor.getString(cursor.getColumnIndex("receiver_id"))));
 
-                Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                        sender,
-                        receiver,
-                        DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                        cursor.getString(cursor.getColumnIndex("text")));
+                Message message = cursorToMessage(cursor);
+
+                // Adding message to list
+                messageList.add(message);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        // Return message list
+        return messageList;
+    }
+
+    // Getting All Message by receiverId
+    public List<Message> getAllMessage() {
+        Log.d("DataBase", "Get all message from DataBase");
+        List<Message> messageList = new ArrayList<Message>();
+        // Select All Query
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s",
+                TABLE_MESSAGE);
+
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
+        // Looping through all rows and adding to list
+        if (cursor.moveToFirst()) {
+            do {
+
+                Message message = cursorToMessage(cursor);
 
                 // Adding message to list
                 messageList.add(message);
@@ -334,6 +334,53 @@ public class DBHandler extends SQLiteOpenHelper {
         int selfId = 0;
 
         return getContact(selfId);
+    }
+
+    private static ContentValues contactToContentValues(Contact contact) {
+
+        ContentValues values = new ContentValues();
+
+        values.put(KEY_CONTACT_ID, contact.getId());
+        values.put(KEY_SERVER_ID, contact.getServerId());
+        values.put(KEY_NAME, contact.getName());
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, bos);
+        values.put(KEY_ICON, bos.toByteArray());
+        values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
+
+        return values;
+    }
+//
+    private static Contact cursorToContact(Cursor cursor) {
+        Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
+                cursor.getString(cursor.getColumnIndex("serverId")),
+                cursor.getString(cursor.getColumnIndex("name")),
+                new DataIcon(cursor.getBlob(cursor.getColumnIndex("icon"))),
+                cursor.getString(cursor.getColumnIndex("public_key")));
+
+        return contact;
+    }
+
+    private static ContentValues messageToContentValues(Message message) {
+        ContentValues values = new ContentValues();
+        values.put(KEY_MESSAGE_ID, message.getId());
+        values.put(KEY_SENDER_ID, message.getSenderId());
+        values.put(KEY_RECEIVER_ID, message.getReceiverId());
+        values.put(KEY_DATE, DateUtils.dateToString(message.getDate()));
+        values.put(KEY_TEXT, message.getText());
+
+        return values;
+    }
+
+    private  Message cursorToMessage(Cursor cursor) {
+
+        Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
+                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
+                cursor.getString(cursor.getColumnIndex("text")));
+
+        return message;
     }
 }
 
