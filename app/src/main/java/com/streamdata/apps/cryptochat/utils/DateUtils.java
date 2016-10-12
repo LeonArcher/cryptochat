@@ -10,14 +10,14 @@ import java.util.Locale;
 
 public class DateUtils {
 
+    static SimpleDateFormat dateFormat =
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private DateUtils(){}
 
     public static Date stringToDate(String strDate) {
 
         Date date = new Date();
         try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
-                    Locale.getDefault());
 
             date = dateFormat.parse(strDate);
 
@@ -29,8 +29,7 @@ public class DateUtils {
     }
 
     public static String dateToString(Date date) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",
-                Locale.getDefault());
+
 
         return dateFormat.format(date);
     }

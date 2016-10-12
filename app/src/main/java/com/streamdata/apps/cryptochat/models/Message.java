@@ -7,17 +7,17 @@ public class Message {
     public static final int EMPTY_ID = 0;
 
     private final int id;
-    private final Contact sender;
-    private final Contact receiver;
+    private final int senderId;
+    private final int receiverId;
     private final Date date;
     private final String text;
 
 
-    public Message(int id, Contact sender, Contact receiver, Date date, String text) {
+    public Message(int id, int senderId, int receiverId, Date date, String text) {
 
         this.id = id;
-        this.sender = sender;
-        this.receiver = receiver;
+        this.senderId = senderId;
+        this.receiverId = receiverId;
         this.date = date;
         this.text = text;
     }
@@ -28,11 +28,11 @@ public class Message {
     }
 
     public int getId() { return id; }
-    public Contact getSender() {
-        return sender;
+    public int getSenderId() {
+        return senderId;
     }
-    public Contact getReceiver() {
-        return receiver;
+    public int getReceiverId() {
+        return receiverId;
     }
     public Date getDate() { return date; }
     public String getText() {

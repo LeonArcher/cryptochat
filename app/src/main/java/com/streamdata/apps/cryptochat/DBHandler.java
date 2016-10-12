@@ -78,7 +78,7 @@ public class DBHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d("DataBase", "Create DataBase");
-        // creating required tables
+        // Creating required tables
         db.execSQL(CREATE_TABLE_CONTACT);
         db.execSQL(CREATE_TABLE_MESSAGE);
 
@@ -96,11 +96,11 @@ public class DBHandler extends SQLiteOpenHelper {
             throw ex;
         }
 
-        // on upgrade drop older tables
+        // On upgrade drop older tables
         db.execSQL(String.format(Locale.US, "DROP TABLE IF EXISTS %s", TABLE_CONTACT));
         db.execSQL(String.format(Locale.US, "DROP TABLE IF EXISTS %s", TABLE_MESSAGE));
 
-        // create new tables
+        // Create new tables
         onCreate(db);
     }
 
@@ -121,7 +121,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_CONTACT, new String[] { KEY_CONTACT_ID,
-                        KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY},
+                        KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY},
                         String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
                         new String[] { String.valueOf(id) }, null, null, null, null);
 
@@ -145,7 +145,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
 
-        if (cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
             return null;
         }
 
@@ -160,6 +160,21 @@ public class DBHandler extends SQLiteOpenHelper {
         cursor.close();
         // Return message list
         return contactList;
+    }
+
+    public Contact getOwnerContact() {
+        Log.d("DataBase", "Get the contact of the Owner");
+        int selfId = 0;
+
+        return getContact(selfId);
+    }
+
+    // Deleting a contact
+    public void deleteContact(int id) {
+        Log.d("DataBase", "Delete Contact by id");
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_CONTACT, String.format(Locale.US, "%s = ?", KEY_CONTACT_ID),
+                new String[] { String.valueOf(id)});
     }
 
     // Adding new Message
@@ -206,7 +221,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId) });
 
-        if (cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
             return null;
         }
 
@@ -234,7 +249,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(receiverId) });
 
-        if (cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
             return null;
         }
 
@@ -264,7 +279,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
 
-        if (cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
            return null;
         }
         // Looping through all rows and adding to list
@@ -291,7 +306,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
 
-        if (cursor.moveToFirst()) {
+        if (!cursor.moveToFirst()) {
             return null;
         }
         // Looping through all rows and adding to list
@@ -337,13 +352,6 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL(sql);
     }
 
-    public Contact getOwnerContact() {
-        Log.d("DataBase", "Get the contact of the Owner");
-        int selfId = 0;
-
-        return getContact(selfId);
-    }
-
     private static ContentValues contactToContentValues(Contact contact) {
 
         ContentValues values = new ContentValues();
@@ -360,10 +368,13 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 //
     private static Contact cursorToContact(Cursor cursor) {
+        DataIcon icon = new DataIcon();
+        icon.create(cursor.getBlob(cursor.getColumnIndex("icon")));
+
         Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
                 cursor.getString(cursor.getColumnIndex("serverId")),
                 cursor.getString(cursor.getColumnIndex("name")),
-                new DataIcon(cursor.getBlob(cursor.getColumnIndex("icon"))),
+                icon,
                 cursor.getString(cursor.getColumnIndex("public_key")));
 
         return contact;
