@@ -62,13 +62,16 @@ public class NetworkObjectLayer {
         return messageList;
     }
 
-    public void postMessage(RMessage message) throws IOException {
+    public RMessage postMessage(RMessage message) throws IOException, JSONException {
 
         // create request string from RMessage model
         String request = messageParser.json(message);
 
-        // send message json
-        networkDataLayer.post(getSendMessageRequestUrl(), request);
+        // send message json and get response
+        String response = networkDataLayer.post(getSendMessageRequestUrl(), request);
+
+        // convert response to RMessage
+        return messageParser.parse(response);
     }
 
     private static String getReceiveMessageRequestUrl(String id) {
