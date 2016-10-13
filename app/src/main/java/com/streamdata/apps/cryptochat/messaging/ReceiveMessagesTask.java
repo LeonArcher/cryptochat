@@ -19,10 +19,7 @@ import java.util.Objects;
  * Class for receiving all messages for specified receiverId and skipping messages with id less or
  * equal to skipToId
  */
-public class ReceiveMessagesTask implements Task<ArrayList<Message>, Exception> {
-
-    private ArrayList<Message> result = null;
-    private Exception error = null;
+public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
 
     private final NetworkObjectLayer network;
     private final String receiverId;
@@ -35,25 +32,21 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>, Exception> 
     }
 
     @Override
-    public void run() {
+    public ArrayList<Message> run() throws IOException, JSONException, ParseException {
         ArrayList<Message> messages = new ArrayList<>();
 
         // get all messages
-        ArrayList<RMessage> rMessages;
-        try {
-            rMessages = network.getMessages(receiverId);
-
-        } catch (IOException | JSONException ex) {
-            error = ex;
-            return;
-        }
+        ArrayList<RMessage> rMessages = network.getMessages(receiverId);
 
         for (RMessage rMessage : rMessages) {
 
             // the receiver should always be self contact
             if (!Objects.equals(rMessage.getReceiverId(), receiverId)) {
-                Log.e(MessageController.MESSAGING_LOG_TAG, null, new AssertionError());
-                continue;
+
+                // TODO: select proper exception type
+                IOException ex = new IOException("Got wrong receiver id");
+                Log.e(MessageController.MESSAGING_LOG_TAG, null, ex);
+                throw ex;
             }
 
             // only new messages should be processed
@@ -63,15 +56,7 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>, Exception> 
 
             // TODO: decrypt the message text
 
-            // convert RMessage to Message, on error continue to next message
-            Message newMessage;
-            try {
-                newMessage = MessageAdapter.toMessage(rMessage);
-
-            } catch (ParseException ex) {
-                Log.e(MessageController.MESSAGING_LOG_TAG, null, ex);
-                continue;
-            }
+            Message newMessage = MessageAdapter.toMessage(rMessage);
 
             messages.add(newMessage);
             // TODO: send message to database
@@ -79,16 +64,6 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>, Exception> 
             Log.d(MessageController.MESSAGING_LOG_TAG, newMessage.getText());
         }
 
-        result = messages;
-    }
-
-    @Override
-    public Exception getError() {
-        return error;
-    }
-
-    @Override
-    public ArrayList<Message> getResult() {
-        return result;
+        return messages;
     }
 }

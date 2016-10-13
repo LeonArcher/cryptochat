@@ -13,20 +13,22 @@ import java.util.concurrent.Executors;
 public class MessageController {
     public static final String MESSAGING_LOG_TAG = "Messaging";
 
-    private final TaskRunner<ArrayList<Message>, Exception> taskRunner;
+    private final TaskRunner<ArrayList<Message>> receiveTaskRunner;
+    private final TaskRunner<Message> sendTaskRunner;
 
     //TODO: table for (receiverId, targetId) -> skipToId
 
     public MessageController() {
-        taskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
+        receiveTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
+        sendTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
     }
 
     public void getNewMessages(String receiverId, String targetId,
-                               Callback<ArrayList<Message>, Exception> getNewMessagesCallback) {
+                               Callback<ArrayList<Message>> getNewMessagesCallback) {
         //
     }
 
-    public void sendMessage(Message message, Callback<Message, Exception> sendMessageCallback) {
+    public void sendMessage(Message message, Callback<Message> sendMessageCallback) {
         //
     }
 }
