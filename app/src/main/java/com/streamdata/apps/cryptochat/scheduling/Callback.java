@@ -1,11 +1,10 @@
 package com.streamdata.apps.cryptochat.scheduling;
 
-import android.support.annotation.Nullable;
-
 /**
  * Callback interface:
- * result and error should always be checked for null
+ * success and error possible events
  */
-public interface Callback<Result, Error> {
-    void call(@Nullable Result result, @Nullable Error error);
+public interface Callback<T> {
+    void onSuccess(T result);
+    void onError(Exception ex);
 }
