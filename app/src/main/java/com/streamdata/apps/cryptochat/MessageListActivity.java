@@ -1,8 +1,8 @@
 package com.streamdata.apps.cryptochat;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -11,13 +11,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.streamdata.apps.cryptochat.messaging.MessageController;
+import com.streamdata.apps.cryptochat.messaging.PeriodicMessageRetrieverService;
+import com.streamdata.apps.cryptochat.models.Contact;
+import com.streamdata.apps.cryptochat.models.Message;
+import com.streamdata.apps.cryptochat.network.NetworkDataLayer;
+import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
+import com.streamdata.apps.cryptochat.scheduling.Callback;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
-
-import com.streamdata.apps.cryptochat.models.Contact;
-import com.streamdata.apps.cryptochat.models.Message;
 
 
 public class MessageListActivity extends AppCompatActivity {
@@ -27,27 +31,31 @@ public class MessageListActivity extends AppCompatActivity {
     Contact targetContact = new Contact(1, "jack_slash", "Jack", null);
     ArrayList<Message> messageList = new ArrayList<>();
 
-    private int lastMessageId;
-
     private BaseAdapter adapter;
     private ListView listView;
     private EditText messageEditText;
-    private SendMessageListener sendMessageListener;
 
-    private MessagingService messagingService;
-    private MessagingHandler messagingHandler;
+    private MessageController messageController;
+    private PeriodicMessageRetrieverService messageRetrieverService;
+
+    private ReceiveMessagesCallback receiveCallback;
+    private SendMessagesCallback sendCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // TODO: load message history from database
-        // TODO: load lastMessageId from settings
-        lastMessageId = 0;
 
-        // initializing messaging service and handler
-        messagingService = new MessagingService();
-        messagingHandler = new MessagingHandler(this);
+        // initialize callbacks
+        receiveCallback = new ReceiveMessagesCallback(this);
+        sendCallback = new SendMessagesCallback();
+
+        // initializing UI handler, network, message controller, periodic message retriever service
+        Handler uiHandler = new Handler();
+        NetworkObjectLayer networkObjectLayer = new NetworkObjectLayer(new NetworkDataLayer());
+        messageController = new MessageController(uiHandler, networkObjectLayer);
+        messageRetrieverService = new PeriodicMessageRetrieverService(messageController);
 
         // init activity view
         setContentView(R.layout.activity_message_list);
@@ -59,7 +67,7 @@ public class MessageListActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
 
         // init send message listener
-        sendMessageListener = new SendMessageListener(this);
+        SendMessageListener sendMessageListener = new SendMessageListener(this);
 
         // setup sendMessageButton configuration
         Button sendMessageButton = (Button) findViewById(R.id.sendMessageButton);
@@ -74,15 +82,19 @@ public class MessageListActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        messagingService.unbindListener();
+        messageRetrieverService.stop();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // subscribing to incoming messages (all new ones from lastMessageId)
-        messagingService.bindListener(messagingHandler, selfContact, targetContact, lastMessageId);
+        // subscribing to incoming messages
+        messageRetrieverService.start(
+                receiveCallback,
+                selfContact.getServerId(),
+                targetContact.getServerId()
+        );
     }
 
     // handle send message event
@@ -103,7 +115,7 @@ public class MessageListActivity extends AppCompatActivity {
                 new Date()
         );
 
-        messagingService.sendMessage(messagingHandler, message);
+        messageController.sendMessage(message, sendCallback);
 
         // update message list
         messageList.add(message);
@@ -114,52 +126,63 @@ public class MessageListActivity extends AppCompatActivity {
 
         // scroll down
         listView.smoothScrollToPosition(adapter.getCount() - 1);
+
+        Log.d(MessageController.MESSAGING_LOG_TAG, "Sent message.");
     }
 
-    private static class MessagingHandler extends Handler {
+    private static class ReceiveMessagesCallback implements Callback<ArrayList<Message>> {
+
         // weak bound with UI thread parent activity
         private final WeakReference<MessageListActivity> parentActivityReference;
 
-        public MessagingHandler(MessageListActivity parent) {
+        public ReceiveMessagesCallback(MessageListActivity parent) {
             parentActivityReference = new WeakReference<>(parent);
         }
 
         @Override
-        public void handleMessage(android.os.Message msg) {
+        public void onSuccess(ArrayList<Message> result) {
             MessageListActivity parent = parentActivityReference.get();
 
             if (parent == null) {
                 return;
             }
 
-            switch (msg.what) {
-                case MessagingService.STATUS_NEW_MESSAGES:
-                    // get message list object
-                    ArrayList<Message> newMessages = (ArrayList<Message>) msg.obj;
-
-                    // update last received message id
-                    parent.lastMessageId = newMessages.get(newMessages.size() - 1).getId();
-
-                    // update message list
-                    parent.messageList.addAll(newMessages);
-                    parent.adapter.notifyDataSetChanged();
-
-                    // scroll down
-                    parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
-
-                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Received messages pack.");
-                    break;
-
-                case MessagingService.STATUS_SEND_MESSAGE_SUCCESS:
-                    // TODO: handle successfully sent message
-                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sent successfully.");
-                    break;
-
-                case MessagingService.STATUS_SEND_MESSAGE_ERROR:
-                    // TODO: handle fail sent message
-                    Log.d(MessagingService.MESSAGING_LOG_TAG, "Message sending error.");
-                    break;
+            // return if no new messages
+            if (result.isEmpty()) {
+                return;
             }
+
+            // update message list
+            parent.messageList.addAll(result);
+            parent.adapter.notifyDataSetChanged();
+
+            // scroll down
+            parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
+
+            Log.d(MessageController.MESSAGING_LOG_TAG, "Received messages pack.");
+        }
+
+        @Override
+        public void onError(Exception ex) {
+            // TODO: handle error
+            throw new RuntimeException("Error receiving messages.", ex);
+        }
+    }
+
+    private static class SendMessagesCallback implements Callback<Message> {
+
+        public SendMessagesCallback() {
+        }
+
+        @Override
+        public void onSuccess(Message result) {
+            // TODO: handle successfully sent message
+        }
+
+        @Override
+        public void onError(Exception ex) {
+            // TODO: handle error
+            throw new RuntimeException("Error sending message.", ex);
         }
     }
 }
