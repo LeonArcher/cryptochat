@@ -1,14 +1,22 @@
 package com.streamdata.apps.cryptochat.messaging;
 
+import android.os.Handler;
+
 import com.streamdata.apps.cryptochat.models.Message;
+import com.streamdata.apps.cryptochat.network.NetworkDataLayer;
+import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
 import com.streamdata.apps.cryptochat.scheduling.Callback;
+import com.streamdata.apps.cryptochat.scheduling.Task;
 import com.streamdata.apps.cryptochat.scheduling.TaskRunner;
+import com.streamdata.apps.cryptochat.utils.ReceiverTargetKey;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 /**
- * TODO: Add a class header comment!
+ * Class for receive/send messages
  */
 public class MessageController {
     public static final String MESSAGING_LOG_TAG = "Messaging";
@@ -16,19 +24,50 @@ public class MessageController {
     private final TaskRunner<ArrayList<Message>> receiveTaskRunner;
     private final TaskRunner<Message> sendTaskRunner;
 
-    //TODO: table for (receiverId, targetId) -> skipToId
+    private final NetworkObjectLayer networkOL;
+    private final Handler uiHandler;
 
-    public MessageController() {
+    // skip messages id's storage to prevent same messages downloading repeatedly
+    Map<ReceiverTargetKey, Integer> skipToIdTable;
+
+    public MessageController(Handler uiHandler) {
         receiveTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
         sendTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
+
+        // init network layers
+        NetworkDataLayer networkDL = new NetworkDataLayer();
+        networkOL = new NetworkObjectLayer(networkDL);
+
+        this.uiHandler = uiHandler;
+
+        // TODO: load skipTOIdTable from settings file
+        skipToIdTable = new ConcurrentHashMap<>();
     }
 
     public void getNewMessages(String receiverId, String targetId,
                                Callback<ArrayList<Message>> getNewMessagesCallback) {
-        //
+
+        ReceiverTargetKey key = new ReceiverTargetKey(receiverId, targetId);
+        Integer val = skipToIdTable.get(key);
+        int skipToId = (val != null) ? val : 0;
+
+        // create message receiving task and subsequent filtering task
+        Task<ArrayList<Message>> task = new TargetFilterMessagesTask(
+                new ReceiveMessagesTask(networkOL, receiverId, skipToId),
+                receiverId,
+                targetId,
+                skipToIdTable
+        );
+
+        receiveTaskRunner.runTask(task, getNewMessagesCallback, uiHandler);
     }
 
     public void sendMessage(Message message, Callback<Message> sendMessageCallback) {
-        //
+
+        sendTaskRunner.runTask(
+                new SendMessageTask(message, networkOL),
+                sendMessageCallback,
+                uiHandler
+        );
     }
 }

@@ -13,7 +13,6 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * Class for receiving all messages for specified receiverId and skipping messages with id less or
@@ -39,15 +38,6 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
         ArrayList<RMessage> rMessages = network.getMessages(receiverId);
 
         for (RMessage rMessage : rMessages) {
-
-            // the receiver should always be self contact
-            if (!Objects.equals(rMessage.getReceiverId(), receiverId)) {
-
-                // TODO: select proper exception type
-                IOException ex = new IOException("Got wrong receiver id");
-                Log.e(MessageController.MESSAGING_LOG_TAG, null, ex);
-                throw ex;
-            }
 
             // only new messages should be processed
             if (rMessage.getId() <= skipToId) {
