@@ -3,7 +3,6 @@ package com.streamdata.apps.cryptochat.messaging;
 import android.os.Handler;
 
 import com.streamdata.apps.cryptochat.models.Message;
-import com.streamdata.apps.cryptochat.network.NetworkDataLayer;
 import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
 import com.streamdata.apps.cryptochat.scheduling.Callback;
 import com.streamdata.apps.cryptochat.scheduling.Task;
@@ -24,19 +23,18 @@ public class MessageController {
     private final TaskRunner<ArrayList<Message>> receiveTaskRunner;
     private final TaskRunner<Message> sendTaskRunner;
 
-    private final NetworkObjectLayer networkOL;
+    private final NetworkObjectLayer network;
     private final Handler uiHandler;
 
     // skip messages id's storage to prevent same messages downloading repeatedly
     Map<ReceiverTargetKey, Integer> skipToIdTable;
 
-    public MessageController(Handler uiHandler) {
+    public MessageController(Handler uiHandler, NetworkObjectLayer network) {
         receiveTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
         sendTaskRunner = new TaskRunner<>(Executors.newSingleThreadExecutor());
 
-        // init network layers
-        NetworkDataLayer networkDL = new NetworkDataLayer();
-        networkOL = new NetworkObjectLayer(networkDL);
+        // init network object layer
+        this.network = network;
 
         this.uiHandler = uiHandler;
 
@@ -53,7 +51,7 @@ public class MessageController {
 
         // create message receiving task and subsequent filtering task
         Task<ArrayList<Message>> task = new TargetFilterMessagesTask(
-                new ReceiveMessagesTask(networkOL, receiverId, skipToId),
+                new ReceiveMessagesTask(network, receiverId, skipToId),
                 receiverId,
                 targetId,
                 skipToIdTable
@@ -65,7 +63,7 @@ public class MessageController {
     public void sendMessage(Message message, Callback<Message> sendMessageCallback) {
 
         sendTaskRunner.runTask(
-                new SendMessageTask(message, networkOL),
+                new SendMessageTask(message, network),
                 sendMessageCallback,
                 uiHandler
         );
