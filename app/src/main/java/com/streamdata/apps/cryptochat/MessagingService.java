@@ -178,7 +178,7 @@ public class MessagingService {
             try {
                 network.postMessage(rMessage);
 
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Log.e(MESSAGING_JSON_LOG_TAG, null, ex);
                 handler.sendEmptyMessage(STATUS_SEND_MESSAGE_ERROR);
                 return;

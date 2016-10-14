@@ -7,4 +7,5 @@ package com.streamdata.apps.cryptochat.scheduling;
 public interface Callback<T> {
     void onSuccess(T result);
     void onError(Exception ex);
+    // TODO: add onCancel method for Callbacks
 }

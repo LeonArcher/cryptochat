@@ -15,7 +15,7 @@ public class TaskRunner<T> {
         this.executor = executor;
     }
 
-    void runTask(Task<T> task, Callback<T> callback,
+    public void runTask(Task<T> task, Callback<T> callback,
                  Handler callbackHandler) {
 
         // execute task on executor
