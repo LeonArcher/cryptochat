@@ -1,27 +1,32 @@
 package com.streamdata.apps.cryptochat.models;
 
 import java.util.Date;
-import com.streamdata.apps.cryptochat.models.Contact;
 
 public class Message {
+    // id to modify in database (as unique key)
+    public static final int EMPTY_ID = 0;
+
+    private final int id;
     private final String text;
     private final Contact sender;
     private final Contact receiver;
     private final Date sentTime;
-    private final Boolean isMine;
 
-    public Message(Contact sender, Contact receiver, String text, Date sentTime, Boolean isMine) {
-
+    public Message(int id, Contact sender, Contact receiver, String text, Date sentTime) {
+        this.id = id;
         this.sender = sender;
         this.receiver = receiver;
         this.text = text;
         this.sentTime = sentTime;
-        this.isMine = isMine;
     }
 
     @Override
     public String toString() {
         return getText();
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getText() {
@@ -39,6 +44,4 @@ public class Message {
     public Date getSentTime() {
         return sentTime;
     }
-
-    public Boolean getIsMine() { return isMine; }
 }

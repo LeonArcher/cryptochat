@@ -5,7 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 /**
- * Created by Leon Archer on 14.09.2016.
+ * Icon, created from one of resource drawables
+ * Returns bitmap object only on request (stores an object after request)
  */
 public class ResourceIcon implements Icon {
     private Bitmap data = null;

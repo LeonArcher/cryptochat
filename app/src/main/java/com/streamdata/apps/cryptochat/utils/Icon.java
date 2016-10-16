@@ -3,7 +3,8 @@ package com.streamdata.apps.cryptochat.utils;
 import android.graphics.Bitmap;
 
 /**
- * Created by Leon Archer on 14.09.2016.
+ * Generic Icon interface
+ * Icon should create/load bitmap object on request
  */
 public interface Icon {
     Bitmap getBitmap();
