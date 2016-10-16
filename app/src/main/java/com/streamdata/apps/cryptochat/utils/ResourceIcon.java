@@ -4,7 +4,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
-
+/**
+ * Icon, created from one of resource drawables
+ * Returns bitmap object only on request (stores an object after request)
+ */
 public class ResourceIcon implements Icon {
     private Bitmap data = null;
     private final Resources resources;
