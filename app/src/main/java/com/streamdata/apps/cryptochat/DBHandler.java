@@ -2,14 +2,10 @@ package com.streamdata.apps.cryptochat;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 import android.util.Log;
@@ -18,31 +14,33 @@ import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.utils.DataIcon;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
-import com.streamdata.apps.cryptochat.utils.Icon;
-import com.streamdata.apps.cryptochat.utils.ResourceIcon;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 
 @WorkerThread
 public class DBHandler extends SQLiteOpenHelper {
+
     // Database Version
     private static final int DATABASE_VERSION = 1;
+
     // Database Name
     private static final String DATABASE_NAME = "DB";
+
     // Table name
     private static final String TABLE_CONTACT = "Contact";
     private static final String TABLE_MESSAGE = "Message";
-    // Contacts Table Contacts names
+
+    // Table Contacts names
     private static final String KEY_CONTACT_ID = "id";
     private static final String KEY_SERVER_ID = "serverId";
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
     private static final String KEY_PUBLIC_KEY= "public_key";
+
     // Table Messages names
     private static final String KEY_MESSAGE_ID = "id";
     private static final String KEY_TEXT = "text";
@@ -51,27 +49,30 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String KEY_RECEIVER_ID = "receiver_id";
 
     // Table Create Statements
+
     // Contact table create statement
-    private static final String CREATE_TABLE_CONTACT =
-            String.format("CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
-                                                                                TABLE_CONTACT,
-                                                                                KEY_CONTACT_ID,
-                                                                                KEY_SERVER_ID,
-                                                                                KEY_NAME,
-                                                                                KEY_ICON,
-                                                                                KEY_PUBLIC_KEY);
+    private static final String CREATE_TABLE_CONTACT = String.format(
+            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
+            TABLE_CONTACT,
+            KEY_CONTACT_ID,
+            KEY_SERVER_ID,
+            KEY_NAME,
+            KEY_ICON,
+            KEY_PUBLIC_KEY
+    );
 
     // Message table create statement
-    private static final String CREATE_TABLE_MESSAGE =
-            String.format("CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
-                                                                                TABLE_MESSAGE,
-                                                                                KEY_MESSAGE_ID,
-                                                                                KEY_TEXT,
-                                                                                KEY_DATE,
-                                                                                KEY_SENDER_ID,
-                                                                                KEY_RECEIVER_ID);
+    private static final String CREATE_TABLE_MESSAGE = String.format(
+            "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
+            TABLE_MESSAGE,
+            KEY_MESSAGE_ID,
+            KEY_TEXT,
+            KEY_DATE,
+            KEY_SENDER_ID,
+            KEY_RECEIVER_ID
+    );
 
-    public DBHandler(Context context) {
+    private DBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -135,7 +136,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return contact;
     }
 
-    public List<Contact> getAllContact() {
+    public List<Contact> getAllContacts() {
         Log.d("DataBase", "Get all Contacts from DataBase");
         List<Contact> contactList = new ArrayList<Contact>();
         // Select All Query
@@ -143,7 +144,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 TABLE_CONTACT);
 
         SQLiteDatabase db = getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
+        Cursor cursor = db.rawQuery(selectQuery, new String[] {});
 
         if (!cursor.moveToFirst()) {
             return null;
@@ -173,8 +174,12 @@ public class DBHandler extends SQLiteOpenHelper {
     public void deleteContact(int id) {
         Log.d("DataBase", "Delete Contact by id");
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_CONTACT, String.format(Locale.US, "%s = ?", KEY_CONTACT_ID),
-                new String[] { String.valueOf(id)});
+
+        db.delete(
+                TABLE_CONTACT,
+                String.format(Locale.US, "%s = ?", KEY_CONTACT_ID),
+                new String[] { String.valueOf(id)}
+        );
     }
 
     // Adding new Message
@@ -193,10 +198,16 @@ public class DBHandler extends SQLiteOpenHelper {
         Log.d("DataBase", "Get Message from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_MESSAGE, new String[] { KEY_MESSAGE_ID,
-                        KEY_SENDER_ID, KEY_RECEIVER_ID, KEY_DATE, KEY_TEXT},
-                        String.format(Locale.US,"%s  =?", KEY_MESSAGE_ID),
-                        new String[] { String.valueOf(id) }, null, null, null, null);
+        Cursor cursor = db.query(
+                TABLE_MESSAGE,
+                new String[] { KEY_MESSAGE_ID, KEY_SENDER_ID, KEY_RECEIVER_ID, KEY_DATE, KEY_TEXT },
+                String.format(Locale.US,"%s  =?", KEY_MESSAGE_ID),
+                new String[] { String.valueOf(id) },
+                null,
+                null,
+                null,
+                null
+        );
 
         if (!cursor.moveToFirst()) {
             return null;
@@ -211,13 +222,18 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by senderId
     @Nullable
-    public List<Message> getAllMessageBySenderId(int senderId) {
+    public List<Message> getAllMessagesBySenderId(int senderId) {
         Log.d("DataBase", "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<Message>();
 
-        // Select All Query
-        String selectQuery = String.format(Locale.US,"SELECT * FROM %s WHERE %s =?",
-                                                        TABLE_MESSAGE, KEY_SENDER_ID);
+        // Select All Queries
+        String selectQuery = String.format(
+                Locale.US,
+                "SELECT * FROM %s WHERE %s =?",
+                TABLE_MESSAGE,
+                KEY_SENDER_ID
+        );
+
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId) });
 
@@ -239,13 +255,17 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by receiverId
     @Nullable
-    public List<Message> getAllMessageByReceiverId(int receiverId) {
+    public List<Message> getAllMessagesByReceiverId(int receiverId) {
         Log.d("DataBase", "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<Message>();
+
         // Select All Query
-        String selectQuery = String.format(Locale.US, "SELECT * FROM %s WHERE %s =?",
-                                                                    TABLE_MESSAGE,
-                                                                    KEY_RECEIVER_ID);
+        String selectQuery = String.format(
+                Locale.US, "SELECT * FROM %s WHERE %s =?",
+                TABLE_MESSAGE,
+                KEY_RECEIVER_ID
+        );
+
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(receiverId) });
 
@@ -267,7 +287,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message of a talk
     @Nullable
-    public List<Message> getAllMessageOfTalk(int senderId, int receiverId) {
+    public List<Message> getAllMessagesOfTalk(int senderId, int receiverId) {
         Log.d("DataBase", "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query
@@ -296,7 +316,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by receiverId
     @Nullable
-    public List<Message> getAllMessage() {
+    public List<Message> getAllMessages() {
         Log.d("DataBase", "Get all message from DataBase");
         List<Message> messageList = new ArrayList<Message>();
         // Select All Query

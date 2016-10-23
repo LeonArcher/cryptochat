@@ -1,7 +1,7 @@
 package com.streamdata.apps.cryptochat.models;
 
 import java.util.Date;
-import com.streamdata.apps.cryptochat.models.Contact;
+
 
 public class Message {
     public static final int EMPTY_ID = 0;
