@@ -24,6 +24,8 @@ import java.util.Locale;
 @WorkerThread
 public class DBHandler extends SQLiteOpenHelper {
 
+    public static final String DB_LOG_TAG = "Database";
+
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
@@ -36,7 +38,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Table Contacts names
     private static final String KEY_CONTACT_ID = "id";
-    private static final String KEY_SERVER_ID = "serverId";
+    private static final String KEY_SERVER_ID = "server_id";
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
     private static final String KEY_PUBLIC_KEY= "public_key";
@@ -72,28 +74,49 @@ public class DBHandler extends SQLiteOpenHelper {
             KEY_RECEIVER_ID
     );
 
+    // database singleton implementation
+    private static Context context = null;
+    private static DBHandler instance;
+
+    public static void setContext(Context context) {
+        DBHandler.context = context;
+    }
+
+    public static synchronized DBHandler getInstance() {
+        if (instance == null) {
+
+            // TODO: make a proper exception if no context set
+            if (context == null) {
+                throw new RuntimeException();
+            }
+
+            instance = new DBHandler(context);
+        }
+        return instance;
+    }
+
     private DBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d("DataBase", "Create DataBase");
+        Log.d(DB_LOG_TAG, "Create DataBase");
         // Creating required tables
         db.execSQL(CREATE_TABLE_CONTACT);
         db.execSQL(CREATE_TABLE_MESSAGE);
 
-        Log.d("DataBase", "DataBase has created");
+        Log.d(DB_LOG_TAG, "DataBase has created");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.d("DataBase", "Upgrade DataBase");
+        Log.d(DB_LOG_TAG, "Upgrade DataBase");
 
         if (newVersion <= oldVersion) {
             String exceptionMessage = String.format(Locale.US,"%d <= %d", newVersion, oldVersion);
             IllegalArgumentException ex = new IllegalArgumentException(exceptionMessage);
-            Log.e("DataBase", "", ex);
+            Log.e(DB_LOG_TAG, null, ex);
             throw ex;
         }
 
@@ -107,7 +130,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Adding new Contact
     public void addContact(Contact contact) {
-        Log.d("DataBase", "Add Contact to DataBase");
+        Log.d(DB_LOG_TAG, "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = contactToContentValues(contact);
 
@@ -118,13 +141,45 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting Contact by id
     @Nullable
     public Contact getContact(int id) {
-        Log.d("DataBase", "Get Contact from DataBase by id");
+        Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
-        Cursor cursor = db.query(TABLE_CONTACT, new String[] { KEY_CONTACT_ID,
-                        KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY},
-                        String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
-                        new String[] { String.valueOf(id) }, null, null, null, null);
+        Cursor cursor = db.query(
+                TABLE_CONTACT,
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
+                new String[] { String.valueOf(id) },
+                null,
+                null,
+                null,
+                null
+        );
+
+        if (!cursor.moveToFirst()) {
+            return null;
+        }
+
+        Contact contact = cursorToContact(cursor);
+        cursor.close();
+
+        return contact;
+    }
+
+    @Nullable
+    public Contact getContactByServerId(String serverId) {
+        Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
+        SQLiteDatabase db = getReadableDatabase();
+
+        Cursor cursor = db.query(
+                TABLE_CONTACT,
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                String.format(Locale.US, "%s  =? ", KEY_SERVER_ID),
+                new String[] { serverId },
+                null,
+                null,
+                null,
+                null
+        );
 
         if (!cursor.moveToFirst()) {
             return null;
@@ -137,11 +192,10 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     public List<Contact> getAllContacts() {
-        Log.d("DataBase", "Get all Contacts from DataBase");
-        List<Contact> contactList = new ArrayList<Contact>();
+        Log.d(DB_LOG_TAG, "Get all Contacts from DataBase");
+        List<Contact> contactList = new ArrayList<>();
         // Select All Query
-        String selectQuery = String.format(Locale.US, "SELECT * FROM %s",
-                TABLE_CONTACT);
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s", TABLE_CONTACT);
 
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, new String[] {});
@@ -164,7 +218,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     public Contact getOwnerContact() {
-        Log.d("DataBase", "Get the contact of the Owner");
+        Log.d(DB_LOG_TAG, "Get the contact of the Owner");
         int selfId = 0;
 
         return getContact(selfId);
@@ -172,7 +226,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Deleting a contact
     public void deleteContact(int id) {
-        Log.d("DataBase", "Delete Contact by id");
+        Log.d(DB_LOG_TAG, "Delete Contact by id");
         SQLiteDatabase db = getWritableDatabase();
 
         db.delete(
@@ -184,7 +238,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Adding new Message
     public void addMessage(Message message) {
-        Log.d("DataBase", "Add Message to DataBase");
+        Log.d(DB_LOG_TAG, "Add Message to DataBase");
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = messageToContentValues(message);
 
@@ -195,7 +249,7 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting one message
     @Nullable
     public Message getMessage(int id) {
-        Log.d("DataBase", "Get Message from DataBase by id");
+        Log.d(DB_LOG_TAG, "Get Message from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(
@@ -223,8 +277,8 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting All Message by senderId
     @Nullable
     public List<Message> getAllMessagesBySenderId(int senderId) {
-        Log.d("DataBase", "Get all messages from DataBase by senderId");
-        List<Message> messageList = new ArrayList<Message>();
+        Log.d(DB_LOG_TAG, "Get all messages from DataBase by senderId");
+        List<Message> messageList = new ArrayList<>();
 
         // Select All Queries
         String selectQuery = String.format(
@@ -256,8 +310,8 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting All Message by receiverId
     @Nullable
     public List<Message> getAllMessagesByReceiverId(int receiverId) {
-        Log.d("DataBase", "Get all message from DataBase by receiverId");
-        List<Message> messageList = new ArrayList<Message>();
+        Log.d(DB_LOG_TAG, "Get all message from DataBase by receiverId");
+        List<Message> messageList = new ArrayList<>();
 
         // Select All Query
         String selectQuery = String.format(
@@ -288,16 +342,22 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting All Message of a talk
     @Nullable
     public List<Message> getAllMessagesOfTalk(int senderId, int receiverId) {
-        Log.d("DataBase", "Get all Messages of a talk by senderId and receiverId");
-        List<Message> messageList = new ArrayList<Message>();
+        Log.d(DB_LOG_TAG, "Get all Messages of a talk by senderId and receiverId");
+        List<Message> messageList = new ArrayList<>();
+
         // Select All Query
-        String selectQuery = String.format(Locale.US, "SELECT * FROM %s WHERE %s =? AND %s =?",
-                                                                                TABLE_MESSAGE,
-                                                                                KEY_SENDER_ID,
-                                                                                KEY_RECEIVER_ID);
+        String selectQuery = String.format(
+                Locale.US, "SELECT * FROM %s WHERE %s =? AND %s =?",
+                TABLE_MESSAGE,
+                KEY_SENDER_ID,
+                KEY_RECEIVER_ID
+        );
 
         SQLiteDatabase db = getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
+        Cursor cursor = db.rawQuery(
+                selectQuery,
+                new String[] { String.valueOf(senderId), String.valueOf(receiverId) }
+        );
 
         if (!cursor.moveToFirst()) {
            return null;
@@ -317,14 +377,13 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting All Message by receiverId
     @Nullable
     public List<Message> getAllMessages() {
-        Log.d("DataBase", "Get all message from DataBase");
-        List<Message> messageList = new ArrayList<Message>();
+        Log.d(DB_LOG_TAG, "Get all message from DataBase");
+        List<Message> messageList = new ArrayList<>();
         // Select All Query
-        String selectQuery = String.format(Locale.US, "SELECT * FROM %s",
-                TABLE_MESSAGE);
+        String selectQuery = String.format(Locale.US, "SELECT * FROM %s", TABLE_MESSAGE);
 
         SQLiteDatabase db = getWritableDatabase();
-        Cursor cursor = db.rawQuery(selectQuery,  new String[] {  });
+        Cursor cursor = db.rawQuery(selectQuery, new String[] {  });
 
         if (!cursor.moveToFirst()) {
             return null;
@@ -343,32 +402,43 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Deleting a message
     public void deleteMessage(int id) {
-        Log.d("DataBase", "Delete Message by id");
+        Log.d(DB_LOG_TAG, "Delete Message by id");
         SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_MESSAGE, String.format(Locale.US, "%s = ?", KEY_MESSAGE_ID),
-                new String[] { String.valueOf(id)});
+        db.delete(
+                TABLE_MESSAGE,
+                String.format(Locale.US, "%s = ?", KEY_MESSAGE_ID),
+                new String[] { String.valueOf(id)}
+        );
     }
 
     // Deleting a talk
     public void deleteTalk(int senderId, int receiverId) {
-        Log.d("DataBase", "Delete talk by senderId and receiverId");
+        Log.d(DB_LOG_TAG, "Delete talk by senderId and receiverId");
         SQLiteDatabase db = getWritableDatabase();
 
-        String deleteQuery = String.format(Locale.US, "%s =? AND %s =?",
-                                                        KEY_SENDER_ID,
-                                                        KEY_RECEIVER_ID);
-        db.delete(TABLE_MESSAGE, deleteQuery,
-                new String[] { String.valueOf(senderId), String.valueOf(receiverId) });
+        String deleteQuery = String.format(
+                Locale.US,
+                "%s =? AND %s =?",
+                KEY_SENDER_ID,
+                KEY_RECEIVER_ID
+        );
+        db.delete(
+                TABLE_MESSAGE,
+                deleteQuery,
+                new String[] { String.valueOf(senderId), String.valueOf(receiverId) }
+        );
     }
 
     // Deleting message older 1 day
     public void deleteOldMessages() {
-        Log.d("DataBase", "Delete all Messages");
+        Log.d(DB_LOG_TAG, "Delete all Messages");
         SQLiteDatabase db = getWritableDatabase();
 
-        String sql = String.format(Locale.US, "DELETE FROM %s WHERE %s <= date('now','-1 day')",
-                                                                                TABLE_MESSAGE,
-                                                                                KEY_DATE);
+        String sql = String.format(
+                Locale.US, "DELETE FROM %s WHERE %s <= date('now','-1 day')",
+                TABLE_MESSAGE,
+                KEY_DATE
+        );
         db.execSQL(sql);
     }
 
@@ -391,13 +461,13 @@ public class DBHandler extends SQLiteOpenHelper {
         DataIcon icon = new DataIcon();
         icon.create(cursor.getBlob(cursor.getColumnIndex("icon")));
 
-        Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                cursor.getString(cursor.getColumnIndex("serverId")),
+        return new Contact(
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
+                cursor.getString(cursor.getColumnIndex("server_id")),
                 cursor.getString(cursor.getColumnIndex("name")),
                 icon,
-                cursor.getString(cursor.getColumnIndex("public_key")));
-
-        return contact;
+                cursor.getString(cursor.getColumnIndex("public_key"))
+        );
     }
 
     private static ContentValues messageToContentValues(Message message) {
@@ -412,14 +482,13 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     private  Message cursorToMessage(Cursor cursor) {
-
-        Message message = new Message(Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
+        return new Message(
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
                 Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
                 Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
                 DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                cursor.getString(cursor.getColumnIndex("text")));
-
-        return message;
+                cursor.getString(cursor.getColumnIndex("text"))
+        );
     }
 }
 
