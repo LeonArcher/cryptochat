@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.messaging.MessageController;
 import com.streamdata.apps.cryptochat.messaging.PeriodicMessageRetrieverService;
 import com.streamdata.apps.cryptochat.models.Contact;
@@ -22,14 +23,15 @@ import com.streamdata.apps.cryptochat.scheduling.Callback;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 public class MessageListActivity extends AppCompatActivity {
 
-    // TODO: get message list, self contact and target contact from database
-    Contact selfContact = new Contact(Contact.selfId, "alex45", "Alex", null);
-    Contact targetContact = new Contact(1, "jack_slash", "Jack", null);
-    ArrayList<Message> messageList = new ArrayList<>();
+    // TODO: get target contact from ContactListActivity
+    Contact selfContact = DBHandler.getInstance().getOwnerContact();
+    Contact targetContact = DBHandler.getInstance().getContact(1);
+    List<Message> messageList = new ArrayList<>();
 
     private BaseAdapter adapter;
     private ListView listView;
@@ -45,7 +47,8 @@ public class MessageListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: load message history from database
+        // TODO: load message history from database in background
+        messageList = DBHandler.getInstance().getAllMessagesOfTalk(targetContact.getId());
 
         // initialize callbacks
         receiveCallback = new ReceiveMessagesCallback(this);
@@ -109,10 +112,10 @@ public class MessageListActivity extends AppCompatActivity {
         // prepare message
         Message message = new Message(
                 Message.EMPTY_ID,
-                selfContact,
-                targetContact,
-                text,
-                new Date()
+                selfContact.getId(),
+                targetContact.getId(),
+                new Date(),
+                text
         );
 
         messageController.sendMessage(message, sendCallback);

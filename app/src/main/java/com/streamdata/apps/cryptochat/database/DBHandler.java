@@ -75,6 +75,9 @@ public class DBHandler extends SQLiteOpenHelper {
             KEY_RECEIVER_ID
     );
 
+    // self contact id in database
+    private static final int SELF_CONTACT_ID = 0;
+
     // database singleton implementation
     private static DBHandler instance = null;
 
@@ -209,9 +212,15 @@ public class DBHandler extends SQLiteOpenHelper {
 
     public Contact getOwnerContact() {
         Log.d(DB_LOG_TAG, "Get the contact of the Owner");
-        int selfId = 0;
 
-        return getContact(selfId);
+        Contact selfContact = getContact(SELF_CONTACT_ID);
+
+        // TODO: handle missing self contact properly
+        if (selfContact == null) {
+            throw new RuntimeException();
+        }
+
+        return selfContact;
     }
 
     // Deleting a contact
@@ -331,13 +340,13 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message of a talk
     @Nullable
-    public List<Message> getAllMessagesOfTalk(int senderId, int receiverId) {
+    public List<Message> getAllMessagesOfTalk(int contactId) {
         Log.d(DB_LOG_TAG, "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<>();
 
         // Select All Query
         String selectQuery = String.format(
-                Locale.US, "SELECT * FROM %s WHERE %s =? AND %s =?",
+                Locale.US, "SELECT * FROM %s WHERE %s =? OR %s =?",
                 TABLE_MESSAGE,
                 KEY_SENDER_ID,
                 KEY_RECEIVER_ID
@@ -346,7 +355,7 @@ public class DBHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery(
                 selectQuery,
-                new String[] { String.valueOf(senderId), String.valueOf(receiverId) }
+                new String[] { String.valueOf(contactId), String.valueOf(contactId) }
         );
 
         if (!cursor.moveToFirst()) {
@@ -481,5 +490,3 @@ public class DBHandler extends SQLiteOpenHelper {
         );
     }
 }
-
-
