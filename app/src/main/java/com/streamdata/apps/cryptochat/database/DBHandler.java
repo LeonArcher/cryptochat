@@ -122,7 +122,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Adding new Contact
-    public void addContact(Contact contact) {
+    public synchronized void addContact(Contact contact) {
         Log.d(DB_LOG_TAG, "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = contactToContentValues(contact);
@@ -133,7 +133,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting Contact by id
     @Nullable
-    public Contact getContact(int id) {
+    public synchronized Contact getContact(int id) {
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
@@ -159,7 +159,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     @Nullable
-    public Contact getContactByServerId(String serverId) {
+    public synchronized Contact getContactByServerId(String serverId) {
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
@@ -184,7 +184,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return contact;
     }
 
-    public List<Contact> getAllContacts() {
+    public synchronized List<Contact> getAllContacts() {
         Log.d(DB_LOG_TAG, "Get all Contacts from DataBase");
         List<Contact> contactList = new ArrayList<>();
         // Select All Query
@@ -210,21 +210,33 @@ public class DBHandler extends SQLiteOpenHelper {
         return contactList;
     }
 
-    public Contact getOwnerContact() {
+    public synchronized Contact getOwnerContact() {
         Log.d(DB_LOG_TAG, "Get the contact of the Owner");
 
-        Contact selfContact = getContact(SELF_CONTACT_ID);
+        return getContact(SELF_CONTACT_ID);
+    }
 
-        // TODO: handle missing self contact properly
-        if (selfContact == null) {
-            throw new RuntimeException();
-        }
+    // TODO: handle existing self contact properly
+    public synchronized void setOwnerContact(Contact contact) {
+        Log.d(DB_LOG_TAG, "Set the contact of the Owner");
 
-        return selfContact;
+        Contact newOwnerContact = new Contact(
+                SELF_CONTACT_ID,
+                contact.getServerId(),
+                contact.getName(),
+                contact.getIcon(),
+                contact.getPublicKey()
+        );
+
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues values = contactToContentValues(newOwnerContact);
+
+        // Inserting Row
+        db.insert(TABLE_CONTACT, null, values);
     }
 
     // Deleting a contact
-    public void deleteContact(int id) {
+    public synchronized void deleteContact(int id) {
         Log.d(DB_LOG_TAG, "Delete Contact by id");
         SQLiteDatabase db = getWritableDatabase();
 
@@ -236,7 +248,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Adding new Message
-    public void addMessage(Message message) {
+    public synchronized void addMessage(Message message) {
         Log.d(DB_LOG_TAG, "Add Message to DataBase");
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = messageToContentValues(message);
@@ -247,7 +259,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting one message
     @Nullable
-    public Message getMessage(int id) {
+    public synchronized Message getMessage(int id) {
         Log.d(DB_LOG_TAG, "Get Message from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
@@ -275,7 +287,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by senderId
     @Nullable
-    public List<Message> getAllMessagesBySenderId(int senderId) {
+    public synchronized List<Message> getAllMessagesBySenderId(int senderId) {
         Log.d(DB_LOG_TAG, "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<>();
 
@@ -308,7 +320,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by receiverId
     @Nullable
-    public List<Message> getAllMessagesByReceiverId(int receiverId) {
+    public synchronized List<Message> getAllMessagesByReceiverId(int receiverId) {
         Log.d(DB_LOG_TAG, "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<>();
 
@@ -340,7 +352,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message of a talk
     @Nullable
-    public List<Message> getAllMessagesOfTalk(int contactId) {
+    public synchronized List<Message> getAllMessagesOfTalk(int contactId) {
         Log.d(DB_LOG_TAG, "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<>();
 
@@ -375,7 +387,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Getting All Message by receiverId
     @Nullable
-    public List<Message> getAllMessages() {
+    public synchronized List<Message> getAllMessages() {
         Log.d(DB_LOG_TAG, "Get all message from DataBase");
         List<Message> messageList = new ArrayList<>();
         // Select All Query
@@ -400,7 +412,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Deleting a message
-    public void deleteMessage(int id) {
+    public synchronized void deleteMessage(int id) {
         Log.d(DB_LOG_TAG, "Delete Message by id");
         SQLiteDatabase db = getWritableDatabase();
         db.delete(
@@ -411,7 +423,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Deleting a talk
-    public void deleteTalk(int senderId, int receiverId) {
+    public synchronized void deleteTalk(int senderId, int receiverId) {
         Log.d(DB_LOG_TAG, "Delete talk by senderId and receiverId");
         SQLiteDatabase db = getWritableDatabase();
 
@@ -429,7 +441,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Deleting message older 1 day
-    public void deleteOldMessages() {
+    public synchronized void deleteOldMessages() {
         Log.d(DB_LOG_TAG, "Delete all Messages");
         SQLiteDatabase db = getWritableDatabase();
 

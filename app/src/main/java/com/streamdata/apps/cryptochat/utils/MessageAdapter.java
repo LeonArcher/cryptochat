@@ -10,7 +10,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Objects;
 
 /**
  * Class containing conversions between message types
@@ -30,23 +29,20 @@ public class MessageAdapter {
         DBHandler db = DBHandler.getInstance();
 
         Contact sender = db.getContactByServerId(message.getSenderId());
+        Contact receiver = db.getContactByServerId(message.getReceiverId());
 
-        // if no such contact available in database
+        // if no such contacts available in database
         if (sender == null) {
             throw new ContactNotFoundException(message.getSenderId());
         }
-
-        Contact selfContact = db.getOwnerContact();
-
-        // TODO: handle wrong receiver exception
-        if (!Objects.equals(message.getReceiverId(), selfContact.getServerId())) {
-            throw new RuntimeException();
+        if (receiver == null) {
+            throw new ContactNotFoundException(message.getReceiverId());
         }
 
         return new Message(
                 message.getId(),
                 sender.getId(),
-                selfContact.getId(),
+                receiver.getId(),
                 dateSentTime,
                 message.getData()
         );

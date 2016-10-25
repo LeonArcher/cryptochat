@@ -3,23 +3,22 @@ package com.streamdata.apps.cryptochat.messaging;
 import android.util.Log;
 
 import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
-import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.models.RMessage;
 import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
 import com.streamdata.apps.cryptochat.scheduling.Task;
-import com.streamdata.apps.cryptochat.utils.MessageAdapter;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for receiving all messages for specified receiverId and skipping messages with id less or
  * equal to skipToId
  */
-public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
+public class ReceiveMessagesTask implements Task<List<RMessage>> {
 
     private final NetworkObjectLayer network;
     private final String receiverId;
@@ -32,28 +31,26 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
     }
 
     @Override
-    public ArrayList<Message> run()
+    public List<RMessage> run()
             throws IOException, JSONException, ParseException, ContactNotFoundException {
 
-        ArrayList<Message> messages = new ArrayList<>();
+        List<RMessage> messages = new ArrayList<>();
 
         // get all messages
-        ArrayList<RMessage> rMessages = network.getMessages(receiverId);
+        List<RMessage> receivedMessages = network.getMessages(receiverId);
 
-        for (RMessage rMessage : rMessages) {
+        for (RMessage message : receivedMessages) {
 
             // only new messages should be processed
-            if (rMessage.getId() <= skipToId) {
+            if (message.getId() <= skipToId) {
                 continue;
             }
 
-            // TODO: decrypt the message text
+//            Message newMessage = MessageAdapter.toMessage(rMessage);
 
-            Message newMessage = MessageAdapter.toMessage(rMessage);
+            messages.add(message);
 
-            messages.add(newMessage);
-
-            Log.d(MessageController.MESSAGING_LOG_TAG, newMessage.getText());
+            Log.d(MessageController.MESSAGING_LOG_TAG, message.getData());
         }
 
         return messages;

@@ -9,7 +9,7 @@ import com.streamdata.apps.cryptochat.scheduling.Task;
 import com.streamdata.apps.cryptochat.scheduling.TaskRunner;
 import com.streamdata.apps.cryptochat.utils.ReceiverTargetKey;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 public class MessageController {
     public static final String MESSAGING_LOG_TAG = "Messaging";
 
-    private final TaskRunner<ArrayList<Message>> receiveTaskRunner;
+    private final TaskRunner<List<Message>> receiveTaskRunner;
     private final TaskRunner<Message> sendTaskRunner;
 
     private final NetworkObjectLayer network;
@@ -43,18 +43,22 @@ public class MessageController {
     }
 
     public void getNewMessages(String receiverId, String targetId,
-                               Callback<ArrayList<Message>> getNewMessagesCallback) {
+                               Callback<List<Message>> getNewMessagesCallback) {
 
         ReceiverTargetKey key = new ReceiverTargetKey(receiverId, targetId);
         Integer val = skipToIdTable.get(key);
         int skipToId = (val != null) ? val : 0;
 
-        // create message receiving task and subsequent filtering task
-        Task<ArrayList<Message>> task = new TargetFilterMessagesTask(
-                new ReceiveMessagesTask(network, receiverId, skipToId),
-                receiverId,
-                targetId,
-                skipToIdTable
+        // TODO: insert step for message decryption
+
+        // create message receiving task and subsequent filtering and converting tasks
+        Task<List<Message>> task = new ConvertToRMessagesTask(
+                new TargetFilterMessagesTask(
+                        new ReceiveMessagesTask(network, receiverId, skipToId),
+                        receiverId,
+                        targetId,
+                        skipToIdTable
+                )
         );
 
         receiveTaskRunner.runTask(task, getNewMessagesCallback, uiHandler);

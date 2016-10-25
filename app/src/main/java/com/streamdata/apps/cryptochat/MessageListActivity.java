@@ -1,5 +1,6 @@
 package com.streamdata.apps.cryptochat;
 
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.network.NetworkDataLayer;
 import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
 import com.streamdata.apps.cryptochat.scheduling.Callback;
+import com.streamdata.apps.cryptochat.utils.ResourceIcon;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -30,9 +32,44 @@ import java.util.List;
 
 public class MessageListActivity extends AppCompatActivity {
 
-    // TODO: get target contact from ContactListActivity
-    Contact selfContact = DBHandler.getInstance().getOwnerContact();
-    Contact targetContact = DBHandler.getInstance().getContact(1);
+    // TODO: load self contact from database only and target contact from ContactListActivity
+    // mock database self contact and target contact
+    {
+        DBHandler db = DBHandler.getInstance();
+
+        Contact owner = db.getOwnerContact();
+
+        Resources resources = ApplicationContext.getContext().getResources();
+
+        if (owner == null) {
+            db.setOwnerContact(new Contact(
+                    0,
+                    "alex45",
+                    "Alex",
+                    new ResourceIcon(resources, R.drawable.male_icon),
+                    ""
+            ));
+        }
+
+        Contact target = db.getContact(1);
+
+        if (target == null) {
+            db.addContact(new Contact(
+                    1,
+                    "jack_slash",
+                    "Jack",
+                    new ResourceIcon(resources, R.drawable.gentleman_icon),
+                    ""
+            ));
+        }
+
+        selfContact = db.getOwnerContact();
+        targetContact = db.getContact(1);
+    }
+
+    Contact selfContact;
+    Contact targetContact;
+
     List<Message> messageList = new ArrayList<>();
 
     private BaseAdapter adapter;
@@ -140,7 +177,7 @@ public class MessageListActivity extends AppCompatActivity {
         Log.d(MessageController.MESSAGING_LOG_TAG, "Sent message.");
     }
 
-    private static class ReceiveMessagesCallback implements Callback<ArrayList<Message>> {
+    private static class ReceiveMessagesCallback implements Callback<List<Message>> {
 
         // weak bound with UI thread parent activity
         private final WeakReference<MessageListActivity> parentActivityReference;
@@ -150,7 +187,7 @@ public class MessageListActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onSuccess(ArrayList<Message> result) {
+        public void onSuccess(List<Message> result) {
             MessageListActivity parent = parentActivityReference.get();
 
             if (parent == null) {

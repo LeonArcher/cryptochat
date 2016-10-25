@@ -1,10 +1,11 @@
 package com.streamdata.apps.cryptochat.messaging;
 
-import com.streamdata.apps.cryptochat.models.Message;
+import com.streamdata.apps.cryptochat.models.RMessage;
 import com.streamdata.apps.cryptochat.scheduling.Task;
 import com.streamdata.apps.cryptochat.utils.ReceiverTargetKey;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -15,9 +16,9 @@ import java.util.Objects;
  *
  * The last id of proper message is saved to skipToIdTable
  */
-public class TargetFilterMessagesTask implements Task<ArrayList<Message>> {
+public class TargetFilterMessagesTask implements Task<List<RMessage>> {
 
-    private final Task<ArrayList<Message>> messagesProviderTask;
+    private final Task<List<RMessage>> messagesProviderTask;
 
     private final String receiverId;
     private final String targetId;
@@ -25,7 +26,7 @@ public class TargetFilterMessagesTask implements Task<ArrayList<Message>> {
     private Map<ReceiverTargetKey, Integer> skipToIdTable;
 
     public TargetFilterMessagesTask(
-            Task<ArrayList<Message>> messagesProviderTask,
+            Task<List<RMessage>> messagesProviderTask,
             String receiverId,
             String targetId,
             Map<ReceiverTargetKey, Integer> skipToIdTable
@@ -37,15 +38,18 @@ public class TargetFilterMessagesTask implements Task<ArrayList<Message>> {
     }
 
     @Override
-    public ArrayList<Message> run() throws Exception {
-        ArrayList<Message> messages = messagesProviderTask.run();
-        ArrayList<Message> targetMessages = new ArrayList<>();
+    public List<RMessage> run() throws Exception {
+
+        // get messages via running the child task
+        List<RMessage> messages = messagesProviderTask.run();
+
+        List<RMessage> targetMessages = new ArrayList<>();
 
         // select messages only with senderId == targetId and matching receiverId
-        for (Message message : messages) {
+        for (RMessage message : messages) {
             if (
-                    Objects.equals(message.getSender().getServerId(), targetId) &&
-                    Objects.equals(message.getReceiver().getServerId(), receiverId)
+                    Objects.equals(message.getSenderId(), targetId) &&
+                    Objects.equals(message.getReceiverId(), receiverId)
                 ) {
                 targetMessages.add(message);
             }

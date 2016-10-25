@@ -3,7 +3,7 @@ package com.streamdata.apps.cryptochat.messaging;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.scheduling.Callback;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for periodic launch of receive messages task through message controller
@@ -20,7 +20,7 @@ public class PeriodicMessageRetrieverService {
         this.messageController = messageController;
     }
 
-    public void start(Callback<ArrayList<Message>> retrieveCallback,
+    public void start(Callback<List<Message>> retrieveCallback,
                       String receiverId, String targetId) {
 
         if (initiator != null) {
@@ -54,11 +54,11 @@ public class PeriodicMessageRetrieverService {
         private final MessageController messageController;
         private final String receiverId;
         private final String targetId;
-        private final Callback<ArrayList<Message>> getNewMessagesCallback;
+        private final Callback<List<Message>> getNewMessagesCallback;
 
         public RetrieveInitiatorThread(String receiverId, String targetId,
                                        MessageController messageController,
-                                       Callback<ArrayList<Message>> getNewMessagesCallback) {
+                                       Callback<List<Message>> getNewMessagesCallback) {
 
             this.messageController = messageController;
             this.receiverId = receiverId;
