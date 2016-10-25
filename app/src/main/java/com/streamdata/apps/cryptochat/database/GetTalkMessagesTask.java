@@ -17,7 +17,8 @@ public class GetTalkMessagesTask implements Task<List<Message>> {
     }
 
     @Override
-    public List<Message> run() throws Exception {
+    public List<Message> run() throws MessagesNotFoundException {
+
         List<Message> messages = DBHandler.getInstance().getAllMessagesOfTalk(targetContactId);
 
         if (messages == null) {

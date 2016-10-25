@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.streamdata.apps.cryptochat.database.DBController;
 import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.messaging.MessageController;
 import com.streamdata.apps.cryptochat.messaging.PeriodicMessageRetrieverService;
@@ -22,6 +23,7 @@ import com.streamdata.apps.cryptochat.scheduling.Callback;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -43,22 +45,27 @@ public class MessageListActivity extends AppCompatActivity {
     private ReceiveMessagesCallback receiveCallback;
     private SendMessagesCallback sendCallback;
 
+    private DBController dbController;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: load message history from database in background
-        messageList = DBHandler.getInstance().getAllMessagesOfTalk(targetContact.getId());
-
         // initialize callbacks
         receiveCallback = new ReceiveMessagesCallback(this);
-        sendCallback = new SendMessagesCallback();
+        sendCallback = new SendMessagesCallback(this);
 
         // initializing UI handler, network, message controller, periodic message retriever service
         Handler uiHandler = new Handler();
         NetworkObjectLayer networkObjectLayer = new NetworkObjectLayer(new NetworkDataLayer());
         messageController = new MessageController(uiHandler, networkObjectLayer);
         messageRetrieverService = new PeriodicMessageRetrieverService(messageController);
+
+        // initializing DB controller
+        dbController = new DBController(uiHandler);
+
+        // request history load from DB in background
+        dbController.loadMessages(targetContact.getId(), new DbLoadMessagesCallback(this));
 
         // init activity view
         setContentView(R.layout.activity_message_list);
@@ -162,6 +169,9 @@ public class MessageListActivity extends AppCompatActivity {
             // scroll down
             parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
 
+            // save messages to database
+            parent.dbController.saveMessages(result, new DbSaveMessagesCallback());
+
             Log.d(MessageController.MESSAGING_LOG_TAG, "Received messages pack.");
         }
 
@@ -174,18 +184,82 @@ public class MessageListActivity extends AppCompatActivity {
 
     private static class SendMessagesCallback implements Callback<Message> {
 
-        public SendMessagesCallback() {
+        // weak bound with UI thread parent activity
+        private final WeakReference<MessageListActivity> parentActivityReference;
+
+        public SendMessagesCallback(MessageListActivity parent) {
+            parentActivityReference = new WeakReference<>(parent);
         }
 
         @Override
         public void onSuccess(Message result) {
             // TODO: handle successfully sent message
+            MessageListActivity parent = parentActivityReference.get();
+
+            if (parent == null) {
+                return;
+            }
+
+            // save successfully sent message to database
+            parent.dbController.saveMessages(
+                    Collections.singletonList(result),
+                    new DbSaveMessagesCallback()
+            );
         }
 
         @Override
         public void onError(Exception ex) {
             // TODO: handle error
             throw new RuntimeException("Error sending message.", ex);
+        }
+    }
+
+    private static class DbLoadMessagesCallback implements Callback<List<Message>> {
+
+        // weak bound with UI thread parent activity
+        private final WeakReference<MessageListActivity> parentActivityReference;
+
+        public DbLoadMessagesCallback(MessageListActivity parent) {
+            parentActivityReference = new WeakReference<>(parent);
+        }
+
+        @Override
+        public void onSuccess(List<Message> result) {
+            MessageListActivity parent = parentActivityReference.get();
+
+            if (parent == null) {
+                return;
+            }
+
+            // update message list
+            parent.messageList.addAll(result);
+            parent.adapter.notifyDataSetChanged();
+
+            // scroll down
+            parent.listView.smoothScrollToPosition(parent.adapter.getCount() - 1);
+
+            Log.d(DBController.DB_CONTROLLER_LOG_TAG, "Loaded messages.");
+        }
+
+        @Override
+        public void onError(Exception ex) {
+            // TODO: handle error
+        }
+    }
+
+    private static class DbSaveMessagesCallback implements Callback<List<Message>> {
+
+        public DbSaveMessagesCallback() {
+        }
+
+        @Override
+        public void onSuccess(List<Message> result) {
+            // TODO: handle successful saving
+        }
+
+        @Override
+        public void onError(Exception ex) {
+            // TODO: handle error
         }
     }
 }

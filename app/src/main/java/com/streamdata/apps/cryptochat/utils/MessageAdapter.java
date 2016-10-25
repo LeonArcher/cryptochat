@@ -1,5 +1,6 @@
 package com.streamdata.apps.cryptochat.utils;
 
+import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
 import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
@@ -9,6 +10,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Class containing conversions between message types
@@ -19,7 +21,8 @@ public class MessageAdapter {
             Locale.US
     );
 
-    public static Message toMessage(RMessage message) throws ParseException {
+    public static Message toMessage(RMessage message)
+            throws ParseException, ContactNotFoundException {
 
         // parse Date from string using server-specific format
         Date dateSentTime = dateFormat.parse(message.getSentTime());
@@ -27,17 +30,23 @@ public class MessageAdapter {
         DBHandler db = DBHandler.getInstance();
 
         Contact sender = db.getContactByServerId(message.getSenderId());
-        Contact receiver = db.getContactByServerId(message.getReceiverId());
 
-        // TODO: create custom exception
-        if (sender == null || receiver == null) {
+        // if no such contact available in database
+        if (sender == null) {
+            throw new ContactNotFoundException(message.getSenderId());
+        }
+
+        Contact selfContact = db.getOwnerContact();
+
+        // TODO: handle wrong receiver exception
+        if (!Objects.equals(message.getReceiverId(), selfContact.getServerId())) {
             throw new RuntimeException();
         }
 
         return new Message(
                 message.getId(),
                 sender.getId(),
-                receiver.getId(),
+                selfContact.getId(),
                 dateSentTime,
                 message.getData()
         );

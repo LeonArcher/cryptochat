@@ -2,6 +2,7 @@ package com.streamdata.apps.cryptochat.messaging;
 
 import android.util.Log;
 
+import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.models.RMessage;
 import com.streamdata.apps.cryptochat.network.NetworkObjectLayer;
@@ -31,7 +32,9 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
     }
 
     @Override
-    public ArrayList<Message> run() throws IOException, JSONException, ParseException {
+    public ArrayList<Message> run()
+            throws IOException, JSONException, ParseException, ContactNotFoundException {
+
         ArrayList<Message> messages = new ArrayList<>();
 
         // get all messages
@@ -49,7 +52,6 @@ public class ReceiveMessagesTask implements Task<ArrayList<Message>> {
             Message newMessage = MessageAdapter.toMessage(rMessage);
 
             messages.add(newMessage);
-            // TODO: send message to database
 
             Log.d(MessageController.MESSAGING_LOG_TAG, newMessage.getText());
         }

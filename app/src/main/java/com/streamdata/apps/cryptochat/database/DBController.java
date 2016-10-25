@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 /**
- * TODO: Add a class header comment!
+ * Controller class for threaded access to database
  */
 public class DBController {
     public static final String DB_CONTROLLER_LOG_TAG = "DBController";
@@ -25,7 +25,12 @@ public class DBController {
     }
 
     public void saveMessages(List<Message> messages, Callback<List<Message>> saveMessagesCallback) {
-        //
+
+        runner.runTask(
+                new SaveMessagesTask(messages),
+                saveMessagesCallback,
+                uiHandler
+        );
     }
 
     public void loadMessages(int targetId, Callback<List<Message>> loadMessagesCallback) {

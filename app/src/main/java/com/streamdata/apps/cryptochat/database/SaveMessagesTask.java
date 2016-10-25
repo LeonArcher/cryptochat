@@ -18,7 +18,7 @@ public class SaveMessagesTask implements Task<List<Message>> {
     }
 
     @Override
-    public List<Message> run() throws Exception {
+    public List<Message> run() {
 
         DBHandler db = DBHandler.getInstance();
 
