@@ -5,7 +5,7 @@ import com.streamdata.apps.cryptochat.models.RMessage;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for REST web service connection and network objects operations
@@ -23,7 +23,7 @@ public class NetworkObjectLayer {
         this.networkDataLayer = networkDataLayer;
     }
 
-    public ArrayList<RMessage> getMessages(String receiverId) throws IOException, JSONException {
+    public List<RMessage> getMessages(String receiverId) throws IOException, JSONException {
 
         String response;
 

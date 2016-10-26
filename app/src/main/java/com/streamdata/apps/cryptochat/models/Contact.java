@@ -38,6 +38,10 @@ public class Contact {
         return name;
     }
 
+    public Icon getIcon() {
+        return icon;
+    }
+
     public Bitmap getIconBitmap() {
         return icon.getBitmap();
     }

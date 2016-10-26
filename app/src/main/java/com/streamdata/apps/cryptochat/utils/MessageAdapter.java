@@ -1,5 +1,7 @@
 package com.streamdata.apps.cryptochat.utils;
 
+import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
+import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.models.RMessage;
@@ -18,32 +20,52 @@ public class MessageAdapter {
             Locale.US
     );
 
-    public static Message toMessage(RMessage message) throws ParseException {
+    public static Message toMessage(RMessage message)
+            throws ParseException, ContactNotFoundException {
 
         // parse Date from string using server-specific format
         Date dateSentTime = dateFormat.parse(message.getSentTime());
 
-        // TODO: load sender and receiver contact from the database
-        Contact sender = new Contact(1, message.getSenderId(), "John Doe", null);
-        Contact receiver = new Contact(1, message.getReceiverId(), "Jane Doe", null);
+        DBHandler db = DBHandler.getInstance();
+
+        Contact sender = db.getContactByServerId(message.getSenderId());
+        Contact receiver = db.getContactByServerId(message.getReceiverId());
+
+        // if no such contacts available in database
+        if (sender == null) {
+            throw new ContactNotFoundException(message.getSenderId());
+        }
+        if (receiver == null) {
+            throw new ContactNotFoundException(message.getReceiverId());
+        }
 
         return new Message(
                 message.getId(),
-                sender,
-                receiver,
-                message.getData(),
-                dateSentTime
+                sender.getId(),
+                receiver.getId(),
+                dateSentTime,
+                message.getData()
         );
     }
 
     public static RMessage toRMessage(Message message) {
 
+        DBHandler db = DBHandler.getInstance();
+
+        Contact sender = db.getContact(message.getSenderId());
+        Contact receiver = db.getContact(message.getReceiverId());
+
+        // TODO: create custom exception
+        if (sender == null || receiver == null) {
+            throw new RuntimeException();
+        }
+
         return new RMessage(
                 message.getId(),
-                message.getSender().getServerId(),
-                message.getReceiver().getServerId(),
+                sender.getServerId(),
+                receiver.getServerId(),
                 message.getText(),
-                dateFormat.format(message.getSentTime())
+                dateFormat.format(message.getDate())
         );
     }
 }

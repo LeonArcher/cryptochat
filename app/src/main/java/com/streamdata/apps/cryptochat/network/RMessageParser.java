@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Parser of REST service message from string
@@ -28,10 +29,10 @@ public class RMessageParser implements Parser<RMessage> {
     }
 
     @Override
-    public ArrayList<RMessage> parseArray(String data) throws JSONException {
+    public List<RMessage> parseArray(String data) throws JSONException {
 
         JSONArray jArray = new JSONArray(data);
-        ArrayList<RMessage> messages = new ArrayList<>();
+        List<RMessage> messages = new ArrayList<>();
 
         for (int i = 0; i < jArray.length(); ++i) {
 
