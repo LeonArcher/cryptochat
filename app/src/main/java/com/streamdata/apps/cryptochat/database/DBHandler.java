@@ -55,7 +55,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Contact table create statement
     private static final String CREATE_TABLE_CONTACT = String.format(
-            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
+            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
             TABLE_CONTACT,
             KEY_CONTACT_ID,
             KEY_SERVER_ID,
@@ -66,7 +66,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Message table create statement
     private static final String CREATE_TABLE_MESSAGE = String.format(
-            "CREATE TABLE %s (%s INTEGER PRIMARY KEY, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
+            "CREATE TABLE %s (%s INTEGER PRIMARY KEY AUTOINCREMENT, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
             TABLE_MESSAGE,
             KEY_MESSAGE_ID,
             KEY_TEXT,
@@ -230,6 +230,11 @@ public class DBHandler extends SQLiteOpenHelper {
 
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = contactToContentValues(newOwnerContact);
+
+        // delete old owner contact if already exists
+        if (getOwnerContact() != null) {
+            deleteContact(SELF_CONTACT_ID);
+        }
 
         // Inserting Row
         db.insert(TABLE_CONTACT, null, values);
@@ -483,7 +488,6 @@ public class DBHandler extends SQLiteOpenHelper {
 
     private static ContentValues messageToContentValues(Message message) {
         ContentValues values = new ContentValues();
-        values.put(KEY_MESSAGE_ID, message.getId());
         values.put(KEY_SENDER_ID, message.getSenderId());
         values.put(KEY_RECEIVER_ID, message.getReceiverId());
         values.put(KEY_DATE, DateUtils.dateToString(message.getDate()));
