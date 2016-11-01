@@ -3,6 +3,7 @@ package com.streamdata.apps.cryptochat.cryptography;
 import com.streamdata.apps.cryptochat.protocol.Protocol;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
@@ -21,30 +22,46 @@ public class RSACryptographerFactory implements CryptographerFactory {
     }
     private final int KEY_SIZE = 1024;
 
-    public Cryptographer create()  throws NoSuchProviderException, NoSuchAlgorithmException,
-            InvalidAlgorithmParameterException, InvalidKeySpecException {
+    public Cryptographer create()  throws CryptographerException {
 
-        SecureRandom random = new SecureRandom();
-        RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(KEY_SIZE, RSAKeyGenParameterSpec.F4);
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "SC");
-        generator.initialize(spec, random);
+        RSACryptographer rsaCryptographer;
+        try {
+            SecureRandom random = new SecureRandom();
+            RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(KEY_SIZE, RSAKeyGenParameterSpec.F4);
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA", "SC");
+            generator.initialize(spec, random);
 
-        KeyPair keyPair = generator.generateKeyPair();
+            KeyPair keyPair = generator.generateKeyPair();
 
-        return new RSACryptographer(keyPair.getPrivate().getEncoded(),
-                                    keyPair.getPublic().getEncoded());
+            rsaCryptographer = new RSACryptographer(keyPair.getPrivate().getEncoded(),
+                    keyPair.getPublic().getEncoded());
+        } catch (NoSuchAlgorithmException | NoSuchProviderException |
+                InvalidAlgorithmParameterException e) {
+
+            throw new CryptographerException(e.getMessage());
+        }
+
+        return rsaCryptographer;
     }
 
     @Override
-    public Cryptographer create(byte[] blob) throws Exception {
-        ByteArrayInputStream in = new ByteArrayInputStream(blob);
-        ObjectInputStream is = new ObjectInputStream(in);
+    public Cryptographer create(byte[] blob) throws CryptographerException {
 
-        return (Cryptographer)is.readObject();
+        Cryptographer cryptographer;
+        try {
+            ByteArrayInputStream in = new ByteArrayInputStream(blob);
+            ObjectInputStream is = new ObjectInputStream(in);
+            cryptographer = (Cryptographer)is.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new CryptographerException(e.getMessage());
+        }
+
+        return cryptographer;
     }
 
     @Override
-    public Cryptographer create(Protocol protocol)  throws Exception {
+    public Cryptographer create(Protocol protocol)  throws CryptographerException {
         return null;
     }
 }

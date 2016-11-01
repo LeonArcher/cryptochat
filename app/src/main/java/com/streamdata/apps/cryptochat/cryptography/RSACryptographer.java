@@ -22,49 +22,77 @@ public class RSACryptographer implements Cryptographer {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
 
-    RSACryptographer(byte[] privateKey, byte[] publicKey) throws NoSuchAlgorithmException,
-            InvalidKeySpecException {
+    RSACryptographer(byte[] privateKey, byte[] publicKey) throws CryptographerException {
+        try {
+            KeyFactory kf = KeyFactory.getInstance("RSA");
 
-        KeyFactory kf = KeyFactory.getInstance("RSA");
+            this.privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
+            this.publicKey = kf.generatePublic(new X509EncodedKeySpec(publicKey));
 
-        this.privateKey = kf.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
-        this.publicKey = kf.generatePublic(new X509EncodedKeySpec(publicKey));
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new CryptographerException(e.getMessage());
+        }
     }
 
     @Override
-    public String encrypt(String text) throws Exception  {
+    public String encrypt(String text) throws CryptographerException  {
 
-        byte[] ciphertext = encrypt(publicKey, text.getBytes());
+        String encryptException;
+        try {
+            byte[] ciphertext = encrypt(publicKey, text.getBytes());
+            encryptException = Base64.encodeToString(ciphertext, Base64.DEFAULT);
+        } catch (CryptographerException e) {
+            throw new CryptographerException(e.getMessage());
+        }
 
-        return Base64.encodeToString(ciphertext, Base64.DEFAULT);
+        return encryptException;
     }
 
-    private byte[] encrypt(Key publicKey, byte[] toBeCiphred) throws NoSuchPaddingException,
-            InvalidKeyException, NoSuchProviderException, NoSuchAlgorithmException,
-            BadPaddingException, IllegalBlockSizeException {
+    private byte[] encrypt(Key publicKey, byte[] toBeCiphred) throws CryptographerException{
+        byte[] encryptMessage;
 
-        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
-        rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        try {
+            Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
+            rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+            encryptMessage = rsaCipher.doFinal(toBeCiphred);
+        } catch (NoSuchPaddingException | InvalidKeyException | NoSuchProviderException |
+                NoSuchAlgorithmException | BadPaddingException | IllegalBlockSizeException e) {
 
-        return rsaCipher.doFinal(toBeCiphred);
+            throw new CryptographerException(e.getMessage());
+        }
+
+        return encryptMessage;
     }
 
     @Override
-    public String decrypt(String ciphertext) throws Exception {
+    public String decrypt(String ciphertext) throws CryptographerException {
+        String decryptMessage;
 
-        byte[] afterDecrypting = decrypt(privateKey, Base64.decode(ciphertext, Base64.DEFAULT));
+        try {
+            byte[] afterDecrypting = decrypt(privateKey, Base64.decode(ciphertext, Base64.DEFAULT));
+            decryptMessage = stringify(afterDecrypting);
+        } catch (CryptographerException e) {
+            throw new CryptographerException(e.getMessage());
+        }
 
-        return stringify(afterDecrypting);
+        return decryptMessage;
     }
 
-    public byte[] decrypt(Key privateKey, byte[] encryptedText) throws NoSuchPaddingException,
-            NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException,
-            BadPaddingException, IllegalBlockSizeException {
+    public byte[] decrypt(Key privateKey, byte[] encryptedText) throws CryptographerException{
 
-        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
-        rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] decryptMessage;
 
-        return rsaCipher.doFinal(encryptedText);
+        try {
+            Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
+            rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
+            decryptMessage = rsaCipher.doFinal(encryptedText);
+
+        } catch ( NoSuchPaddingException | NoSuchProviderException | NoSuchAlgorithmException |
+                InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            throw new CryptographerException(e.getMessage());
+        }
+
+        return decryptMessage;
     }
 
     private String stringify(byte[] bytes) {
