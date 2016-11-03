@@ -15,13 +15,24 @@ import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 
-
+/**
+ * Factory of Cryptographers based on RSA.
+ */
 public class RSACryptographerFactory implements CryptographerFactory {
     static {
         Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
     }
     private final int KEY_SIZE = 1024;
 
+    /**
+     * Create new Cryptographer.
+     *
+     * @return  Object of Cryptographer.
+     * @throws CryptographerException
+     *
+     * @see CryptographerException
+     * @see Cryptographer
+     */
     public Cryptographer create()  throws CryptographerException {
 
         RSACryptographer rsaCryptographer;

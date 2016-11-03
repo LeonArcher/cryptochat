@@ -18,6 +18,10 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+
+/**
+ * Cryptographer based on RSA.
+ */
 public class RSACryptographer implements Cryptographer {
     private final PrivateKey privateKey;
     private final PublicKey publicKey;
@@ -48,6 +52,17 @@ public class RSACryptographer implements Cryptographer {
         return encryptException;
     }
 
+    /**
+     * Encrypt byte array to byte array.
+     *
+     * @param publicKey         Public key for RSA.
+     * @param toBeCiphred       Byte array that needs to be encrypted.
+     * @return                  Encrypted byte array.
+     *
+     * @throws CryptographerException
+     *
+     * @see CryptographerException
+     */
     private byte[] encrypt(Key publicKey, byte[] toBeCiphred) throws CryptographerException{
         byte[] encryptMessage;
 
@@ -78,6 +93,17 @@ public class RSACryptographer implements Cryptographer {
         return decryptMessage;
     }
 
+    /**
+     * Decrypt byte array to byte array.
+     *
+     * @param privateKey        Private key for RSA.
+     * @param encryptedText     Byte array that needs to be decrypted.
+     * @return                  Decrypted byte array.
+     *
+     * @throws CryptographerException
+     *
+     * @see CryptographerException
+     */
     public byte[] decrypt(Key privateKey, byte[] encryptedText) throws CryptographerException{
 
         byte[] decryptMessage;
