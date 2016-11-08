@@ -12,6 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.streamdata.apps.cryptochat.cryptography.CryptographerException;
+import com.streamdata.apps.cryptochat.cryptography.RSACryptographerFactory;
 import com.streamdata.apps.cryptochat.database.DBController;
 import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.messaging.MessageController;
@@ -35,36 +37,44 @@ public class MessageListActivity extends AppCompatActivity {
     // TODO: load self contact from database only and target contact from ContactListActivity
     // mock database self contact and target contact
     {
-        DBHandler db = DBHandler.getInstance();
+        try {
 
-        Contact owner = db.getOwnerContact();
+            DBHandler db = DBHandler.getInstance();
 
-        Resources resources = ApplicationContext.getContext().getResources();
+            Contact owner = db.getOwnerContact();
 
-        if (owner == null) {
-            db.setOwnerContact(new Contact(
-                    0,
-                    "alex45",
-                    "Alex",
-                    new ResourceIcon(resources, R.drawable.male_icon),
-                    ""
-            ));
+            Resources resources = ApplicationContext.getContext().getResources();
+
+            if (owner == null) {
+                db.setOwnerContact(new Contact(
+                        0,
+                        "alex45",
+                        "Alex",
+                        new ResourceIcon(resources, R.drawable.male_icon),
+                        "",
+                        new RSACryptographerFactory().create()
+                ));
+            }
+
+            Contact target = db.getContact(1);
+
+            if (target == null) {
+                db.addContact(new Contact(
+                        1,
+                        "jack_slash",
+                        "Jack",
+                        new ResourceIcon(resources, R.drawable.gentleman_icon),
+                        "",
+                        new RSACryptographerFactory().create()
+                ));
+            }
+
+            selfContact = db.getOwnerContact();
+            targetContact = db.getContact(1);
+        } catch (Exception e){
+//            TODO: Remove the code
+            throw new RuntimeException(e);
         }
-
-        Contact target = db.getContact(1);
-
-        if (target == null) {
-            db.addContact(new Contact(
-                    1,
-                    "jack_slash",
-                    "Jack",
-                    new ResourceIcon(resources, R.drawable.gentleman_icon),
-                    ""
-            ));
-        }
-
-        selfContact = db.getOwnerContact();
-        targetContact = db.getContact(1);
     }
 
     Contact selfContact;
@@ -109,7 +119,11 @@ public class MessageListActivity extends AppCompatActivity {
 
         // setup listView configuration
         float scale = getResources().getDisplayMetrics().density;
-        adapter = new MessageListAdapter(this, messageList, scale);
+        try {
+            adapter = new MessageListAdapter(this, messageList, scale);
+        } catch (CryptographerException e) {
+//            TODO: make something
+        }
         listView = (ListView) findViewById(R.id.msgListView);
         listView.setAdapter(adapter);
 

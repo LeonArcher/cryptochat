@@ -60,9 +60,9 @@ public class RSACryptographerFactory implements CryptographerFactory {
 
         Cryptographer cryptographer;
         try {
-            ByteArrayInputStream in = new ByteArrayInputStream(blob);
-            ObjectInputStream is = new ObjectInputStream(in);
-            cryptographer = (Cryptographer)is.readObject();
+            ByteArrayInputStream byteArray = new ByteArrayInputStream(blob);
+            ObjectInputStream inputStream = new ObjectInputStream(byteArray);
+            cryptographer = (RSACryptographer)inputStream.readObject();
 
         } catch (IOException | ClassNotFoundException e) {
             throw new CryptographerException(e.getMessage());

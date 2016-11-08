@@ -1,5 +1,6 @@
 package com.streamdata.apps.cryptochat.messaging;
 
+import com.streamdata.apps.cryptochat.cryptography.CryptographerException;
 import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
 import com.streamdata.apps.cryptochat.models.Message;
 import com.streamdata.apps.cryptochat.models.RMessage;
@@ -27,8 +28,8 @@ public class SendMessageTask implements Task<Message> {
     }
 
     @Override
-    public Message run()
-            throws IOException, JSONException, ParseException, ContactNotFoundException {
+    public Message run() throws IOException, JSONException, ParseException,
+            ContactNotFoundException, CryptographerException {
 
         RMessage rMessage = MessageAdapter.toRMessage(message);
         // TODO: encrypt the text

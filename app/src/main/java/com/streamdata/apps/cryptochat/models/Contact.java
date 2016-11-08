@@ -2,6 +2,9 @@ package com.streamdata.apps.cryptochat.models;
 
 import android.graphics.Bitmap;
 
+import com.streamdata.apps.cryptochat.cryptography.Cryptographer;
+import com.streamdata.apps.cryptochat.cryptography.CryptographerFactory;
+import com.streamdata.apps.cryptochat.cryptography.RSACryptographerFactory;
 import com.streamdata.apps.cryptochat.utils.Icon;
 
 
@@ -12,13 +15,26 @@ public class Contact {
     private final String name;
     private final Icon icon;
     private final String publicKey;
+    public Cryptographer cryptographer;
 
     public Contact(int id, String serverId, String name, Icon icon, String publicKey) {
+
         this.id = id;
         this.serverId = serverId;
         this.name = name;
         this.icon = icon;
         this.publicKey = publicKey;
+        RSACryptographerFactory cryptographerFactory = new RSACryptographerFactory();
+    }
+
+    public Contact(int id, String serverId, String name, Icon icon, String publicKey,
+                   Cryptographer cryptographer) {
+        this.id = id;
+        this.serverId = serverId;
+        this.name = name;
+        this.icon = icon;
+        this.publicKey = publicKey;
+        this.cryptographer = cryptographer;
     }
 
     @Override
