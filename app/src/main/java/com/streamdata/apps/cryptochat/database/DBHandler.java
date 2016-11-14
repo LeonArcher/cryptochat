@@ -133,7 +133,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Adding new Contact
-    public synchronized void addContact(Contact contact) throws IOException{
+    public synchronized void addContact(Contact contact) {
         Log.d(DB_LOG_TAG, "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = contactToContentValues(contact);
@@ -230,8 +230,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // TODO: handle existing self contact properly
-    public synchronized void setOwnerContact(Contact contact) throws IOException,
-            CryptographerException {
+    public synchronized void setOwnerContact(Contact contact)throws CryptographerException {
         Log.d(DB_LOG_TAG, "Set the contact of the Owner");
 
         Contact newOwnerContact = new Contact(
@@ -473,25 +472,49 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL(sql);
     }
 
-    private static ContentValues contactToContentValues(Contact contact) throws IOException{
+    private static ContentValues contactToContentValues(Contact contact) {
 
         ContentValues values = new ContentValues();
-
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
+        // Add fields to ContentValues
         values.put(KEY_CONTACT_ID, contact.getId());
         values.put(KEY_SERVER_ID, contact.getServerId());
         values.put(KEY_NAME, contact.getName());
-        contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
-        values.put(KEY_ICON, byteArrayOutputStream.toByteArray());
         values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
 
-        byteArrayOutputStream = new ByteArrayOutputStream();
-        ObjectOutput out = new ObjectOutputStream(byteArrayOutputStream);
-        out.writeObject(contact.cryptographer);
-        out.flush();
-        byte[] cryptographerBytes = byteArrayOutputStream.toByteArray();
-        values.put(KEY_CRYPTOGRAPHER, cryptographerBytes);
+        ObjectOutput out = null;
+        ByteArrayOutputStream byteArrayOutputStreamIcon = null;
+        ByteArrayOutputStream byteArrayOutputStreamCryptographer = null;
+        try {
+            // Add Icon to ContentValue
+            byteArrayOutputStreamIcon = new ByteArrayOutputStream();
+            contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStreamIcon);
+            values.put(KEY_ICON, byteArrayOutputStreamIcon.toByteArray());
+            // Add cryptographer to ContentValue
+            byteArrayOutputStreamCryptographer = new ByteArrayOutputStream();
+            out = new ObjectOutputStream(byteArrayOutputStreamCryptographer);
+            out.writeObject(contact.getCryptographer());
+            out.flush();
+            byte[] cryptographerBytes = byteArrayOutputStreamCryptographer.toByteArray();
+            values.put(KEY_CRYPTOGRAPHER, cryptographerBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+
+                if (byteArrayOutputStreamIcon != null) {
+                    byteArrayOutputStreamIcon.close();
+                }
+
+                if (byteArrayOutputStreamCryptographer != null) {
+                    byteArrayOutputStreamCryptographer.close();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e.getMessage());
+            }
+        }
 
         return values;
     }
@@ -499,19 +522,19 @@ public class DBHandler extends SQLiteOpenHelper {
     private static Contact cursorToContact(Cursor cursor) throws CryptographerException {
 //        Serialize icon
         DataIcon icon = new DataIcon();
-        icon.create(cursor.getBlob(cursor.getColumnIndex("icon")));
+        icon.create(cursor.getBlob(cursor.getColumnIndex(KEY_ICON)));
 //        Serialize cryptographer
         CryptographerFactory cryptographerFactory = new RSACryptographerFactory();
-        byte[] blob =  cursor.getBlob(cursor.getColumnIndex("cryptographer"));
+        byte[] blob =  cursor.getBlob(cursor.getColumnIndex(KEY_CRYPTOGRAPHER));
         Cryptographer cryptographer = cryptographerFactory.create(blob);
 
 
         return new Contact(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                cursor.getString(cursor.getColumnIndex("server_id")),
-                cursor.getString(cursor.getColumnIndex("name")),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_CONTACT_ID))),
+                cursor.getString(cursor.getColumnIndex(KEY_SERVER_ID)),
+                cursor.getString(cursor.getColumnIndex(KEY_NAME)),
                 icon,
-                cursor.getString(cursor.getColumnIndex("public_key")),
+                cursor.getString(cursor.getColumnIndex(KEY_PUBLIC_KEY)),
                 cryptographer
         );
     }
@@ -528,11 +551,11 @@ public class DBHandler extends SQLiteOpenHelper {
 
     private  Message cursorToMessage(Cursor cursor) {
         return new Message(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
-                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                cursor.getString(cursor.getColumnIndex("text"))
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MESSAGE_ID))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_SENDER_ID))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_RECEIVER_ID))),
+                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex(KEY_DATE))),
+                cursor.getString(cursor.getColumnIndex(KEY_TEXT))
         );
     }
 }

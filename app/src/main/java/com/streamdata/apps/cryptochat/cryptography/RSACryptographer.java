@@ -17,6 +17,7 @@ import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -30,28 +31,19 @@ import javax.crypto.spec.SecretKeySpec;
  * Cryptographer based on RSA.
  */
 public class RSACryptographer implements Cryptographer, Externalizable {
-    private  PrivateKey privateKey;
-    private  PublicKey publicKey;
+    private  PrivateKey privateKey = null;
+    private  PublicKey publicKey = null;
+    private  byte[] privateKeyBytes;
+    private  byte[] publicKeyBytes;
     private  KeyFactory keyFactory;
 
-    RSACryptographer(byte[] privateKey, byte[] publicKey) throws CryptographerException {
-        try {
-            keyFactory = KeyFactory.getInstance("RSA");
-
-            this.privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKey));
-            this.publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKey));
-
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new CryptographerException(e.getMessage());
-        }
+    RSACryptographer(byte[] privateKey, byte[] publicKey) {
+//        privateKeyBytes = privateKey;
+        privateKeyBytes = Arrays.copyOf(privateKey, privateKey.length);
+        publicKeyBytes = Arrays.copyOf(publicKey, publicKey.length);
     }
 
-    RSACryptographer() throws CryptographerException {
-        try {
-            keyFactory = KeyFactory.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
-            throw new CryptographerException(e.getMessage());
-        }
+    RSACryptographer() {
     }
 
     @Override
@@ -59,7 +51,7 @@ public class RSACryptographer implements Cryptographer, Externalizable {
 
         String encryptException;
         try {
-            byte[] ciphertext = encrypt(publicKey, text.getBytes());
+            byte[] ciphertext = encrypt(getPublicKey(), text.getBytes());
             encryptException = Base64.encodeToString(ciphertext, Base64.DEFAULT);
         } catch (CryptographerException e) {
             throw new CryptographerException(e.getMessage());
@@ -100,7 +92,7 @@ public class RSACryptographer implements Cryptographer, Externalizable {
         String decryptMessage;
 
         try {
-            byte[] afterDecrypting = decrypt(privateKey, Base64.decode(ciphertext, Base64.DEFAULT));
+            byte[] afterDecrypting = decrypt(getPrivateKey(), Base64.decode(ciphertext, Base64.DEFAULT));
             decryptMessage = stringify(afterDecrypting);
         } catch (CryptographerException e) {
             throw new CryptographerException(e.getMessage());
@@ -153,13 +145,49 @@ public class RSACryptographer implements Cryptographer, Externalizable {
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(privateKey);
-        out.writeObject(publicKey);
+        out.writeObject(privateKeyBytes);
+        out.writeObject(publicKeyBytes);
     }
 
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-            privateKey = (PrivateKey)in.readObject();
-            publicKey = (PublicKey)in.readObject();
+        privateKeyBytes = (byte[]) in.readObject();
+        publicKeyBytes = (byte[]) in.readObject();
+    }
+
+    private KeyFactory getKeyFactory() throws CryptographerException {
+        if (keyFactory == null) {
+            try {
+                keyFactory = KeyFactory.getInstance("RSA");
+            } catch (NoSuchAlgorithmException e) {
+                throw new CryptographerException(e.getMessage());
+            }
+        }
+
+        return keyFactory;
+    }
+
+    private PrivateKey getPrivateKey() throws CryptographerException {
+        if (privateKey == null) {
+            try {
+                privateKey = getKeyFactory().generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+            } catch (InvalidKeySpecException e) {
+                throw new CryptographerException(e.getMessage());
+            }
+        }
+
+        return privateKey;
+    }
+
+    private PublicKey getPublicKey() throws CryptographerException {
+        if (publicKey == null) {
+            try {
+                publicKey = getKeyFactory().generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+            } catch (InvalidKeySpecException e) {
+                throw new CryptographerException(e.getMessage());
+            }
+        }
+
+        return publicKey;
     }
 }

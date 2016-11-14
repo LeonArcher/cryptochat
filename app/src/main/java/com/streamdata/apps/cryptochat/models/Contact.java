@@ -14,8 +14,9 @@ public class Contact {
     private final String serverId;
     private final String name;
     private final Icon icon;
+//    TODO: Delete the field
     private final String publicKey;
-    public Cryptographer cryptographer;
+    private Cryptographer cryptographer;
 
     public Contact(int id, String serverId, String name, Icon icon, String publicKey) {
 
@@ -63,4 +64,6 @@ public class Contact {
     }
 
     public String getPublicKey() { return publicKey; }
+
+    public Cryptographer getCryptographer() {return cryptographer; }
 }
