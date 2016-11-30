@@ -17,6 +17,7 @@ import com.streamdata.apps.cryptochat.cryptography.CryptographerFactory;
 import com.streamdata.apps.cryptochat.cryptography.RSACryptographerFactory;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
+import com.streamdata.apps.cryptochat.utils.DataBaseUtils;
 import com.streamdata.apps.cryptochat.utils.DataIcon;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
 
@@ -481,40 +482,8 @@ public class DBHandler extends SQLiteOpenHelper {
         values.put(KEY_NAME, contact.getName());
         values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
 
-        ObjectOutput out = null;
-        ByteArrayOutputStream byteArrayOutputStreamIcon = null;
-        ByteArrayOutputStream byteArrayOutputStreamCryptographer = null;
-        try {
-            // Add Icon to ContentValue
-            byteArrayOutputStreamIcon = new ByteArrayOutputStream();
-            contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStreamIcon);
-            values.put(KEY_ICON, byteArrayOutputStreamIcon.toByteArray());
-            // Add cryptographer to ContentValue
-            byteArrayOutputStreamCryptographer = new ByteArrayOutputStream();
-            out = new ObjectOutputStream(byteArrayOutputStreamCryptographer);
-            out.writeObject(contact.getCryptographer());
-            out.flush();
-            byte[] cryptographerBytes = byteArrayOutputStreamCryptographer.toByteArray();
-            values.put(KEY_CRYPTOGRAPHER, cryptographerBytes);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-
-                if (byteArrayOutputStreamIcon != null) {
-                    byteArrayOutputStreamIcon.close();
-                }
-
-                if (byteArrayOutputStreamCryptographer != null) {
-                    byteArrayOutputStreamCryptographer.close();
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e.getMessage());
-            }
-        }
+        values.put(KEY_ICON, DataBaseUtils.iconToBytes(contact.getIcon()));
+        values.put(KEY_CRYPTOGRAPHER, DataBaseUtils.cryptographerToBytes(contact.getCryptographer()));
 
         return values;
     }
