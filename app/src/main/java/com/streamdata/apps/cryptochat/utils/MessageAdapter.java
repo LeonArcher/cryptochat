@@ -20,13 +20,11 @@ public class MessageAdapter {
             Locale.US
     );
 
-    public static Message toMessage(RMessage message)
+    public static Message toMessage(RMessage message, DBHandler db)
             throws ParseException, ContactNotFoundException {
 
         // parse Date from string using server-specific format
         Date dateSentTime = dateFormat.parse(message.getSentTime());
-
-        DBHandler db = DBHandler.getInstance();
 
         Contact sender = db.getContactByServerId(message.getSenderId());
         Contact receiver = db.getContactByServerId(message.getReceiverId());
@@ -48,9 +46,7 @@ public class MessageAdapter {
         );
     }
 
-    public static RMessage toRMessage(Message message) {
-
-        DBHandler db = DBHandler.getInstance();
+    public static RMessage toRMessage(Message message, DBHandler db) {
 
         Contact sender = db.getContact(message.getSenderId());
         Contact receiver = db.getContact(message.getReceiverId());
