@@ -13,22 +13,12 @@ public class DateUtils {
 
     private DateUtils() {}
 
-    public static Date stringToDate(String strDate) {
+    public static Date stringToDate(String strDate) throws ParseException {
 
-        Date date = new Date();
-        try {
-            date = dateFormat.parse(strDate);
-
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-
-        return date;
+        return dateFormat.parse(strDate);
     }
 
     public static String dateToString(Date date) {
         return dateFormat.format(date);
     }
 }
-
-

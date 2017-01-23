@@ -19,15 +19,17 @@ public class DBController {
             new TaskRunner<>(Executors.newSingleThreadExecutor());
 
     private final Handler uiHandler;
+    private final DBHandler db;
 
-    public DBController(Handler uiHandler) {
+    public DBController(DBHandler db, Handler uiHandler) {
+        this.db = db;
         this.uiHandler = uiHandler;
     }
 
     public void saveMessages(List<Message> messages, Callback<List<Message>> saveMessagesCallback) {
 
         runner.runTask(
-                new SaveMessagesTask(messages),
+                new SaveMessagesTask(messages, db),
                 saveMessagesCallback,
                 uiHandler
         );
@@ -36,7 +38,7 @@ public class DBController {
     public void loadMessages(int targetId, Callback<List<Message>> loadMessagesCallback) {
 
         runner.runTask(
-                new GetTalkMessagesTask(targetId),
+                new GetTalkMessagesTask(targetId, db),
                 loadMessagesCallback,
                 uiHandler
         );
