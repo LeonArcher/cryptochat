@@ -46,8 +46,7 @@ public class MessageListActivity extends AppCompatActivity {
                     0,
                     "alex45",
                     "Alex",
-                    new ResourceIcon(resources, R.drawable.male_icon),
-                    ""
+                    new ResourceIcon(resources, R.drawable.male_icon)
             ));
         }
 
@@ -58,8 +57,7 @@ public class MessageListActivity extends AppCompatActivity {
                     1,
                     "jack_slash",
                     "Jack",
-                    new ResourceIcon(resources, R.drawable.gentleman_icon),
-                    ""
+                    new ResourceIcon(resources, R.drawable.gentleman_icon)
             ));
         }
 

@@ -42,7 +42,6 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String KEY_SERVER_ID = "server_id";
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
-    private static final String KEY_PUBLIC_KEY= "public_key";
 
     // Table Messages names
     private static final String KEY_MESSAGE_ID = "id";
@@ -55,13 +54,12 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Contact table create statement
     private static final String CREATE_TABLE_CONTACT = String.format(
-            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
+            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s  TEXT, %s BLOB)",
             TABLE_CONTACT,
             KEY_CONTACT_ID,
             KEY_SERVER_ID,
             KEY_NAME,
-            KEY_ICON,
-            KEY_PUBLIC_KEY
+            KEY_ICON
     );
 
     // Message table create statement
@@ -139,7 +137,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         Cursor cursor = db.query(
                 TABLE_CONTACT,
-                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON},
                 String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
                 new String[] { String.valueOf(id) },
                 null,
@@ -165,7 +163,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         Cursor cursor = db.query(
                 TABLE_CONTACT,
-                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON },
                 String.format(Locale.US, "%s  =? ", KEY_SERVER_ID),
                 new String[] { serverId },
                 null,
@@ -224,8 +222,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 SELF_CONTACT_ID,
                 contact.getServerId(),
                 contact.getName(),
-                contact.getIcon(),
-                contact.getPublicKey()
+                contact.getIcon()
         );
 
         SQLiteDatabase db = getWritableDatabase();
@@ -468,7 +465,6 @@ public class DBHandler extends SQLiteOpenHelper {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, bos);
         values.put(KEY_ICON, bos.toByteArray());
-        values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
 
         return values;
     }
@@ -481,8 +477,7 @@ public class DBHandler extends SQLiteOpenHelper {
                 Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
                 cursor.getString(cursor.getColumnIndex("server_id")),
                 cursor.getString(cursor.getColumnIndex("name")),
-                icon,
-                cursor.getString(cursor.getColumnIndex("public_key"))
+                icon
         );
     }
 
