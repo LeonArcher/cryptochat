@@ -3,6 +3,7 @@ package com.streamdata.apps.cryptochat.database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseErrorHandler;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
@@ -38,17 +39,17 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String TABLE_MESSAGE = "Message";
 
     // Table Contacts names
-    private static final String KEY_CONTACT_ID = "id";
-    private static final String KEY_SERVER_ID = "server_id";
-    private static final String KEY_NAME = "name";
-    private static final String KEY_ICON= "icon";
+    static final String KEY_CONTACT_ID = "id";
+    static final String KEY_SERVER_ID = "server_id";
+    static final String KEY_NAME = "name";
+    static final String KEY_ICON = "icon";
 
     // Table Messages names
-    private static final String KEY_MESSAGE_ID = "id";
-    private static final String KEY_TEXT = "text";
-    private static final String KEY_DATE = "date";
-    private static final String KEY_SENDER_ID = "sender_id";
-    private static final String KEY_RECEIVER_ID = "receiver_id";
+    static final String KEY_MESSAGE_ID = "id";
+    static final String KEY_TEXT = "text";
+    static final String KEY_DATE = "date";
+    static final String KEY_SENDER_ID = "sender_id";
+    static final String KEY_RECEIVER_ID = "receiver_id";
 
     // Table Create Statements
 
@@ -123,7 +124,7 @@ public class DBHandler extends SQLiteOpenHelper {
     public synchronized void addContact(Contact contact) {
         Log.d(DB_LOG_TAG, "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = contactToContentValues(contact);
+        ContentValues values = DatabaseAdapter.contactToContentValues(contact);
 
         // Inserting Row
         db.insert(TABLE_CONTACT, null, values);
@@ -150,7 +151,7 @@ public class DBHandler extends SQLiteOpenHelper {
             return null;
         }
 
-        Contact contact = cursorToContact(cursor);
+        Contact contact = DatabaseAdapter.cursorToContact(cursor);
         cursor.close();
 
         return contact;
@@ -176,7 +177,7 @@ public class DBHandler extends SQLiteOpenHelper {
             return null;
         }
 
-        Contact contact = cursorToContact(cursor);
+        Contact contact = DatabaseAdapter.cursorToContact(cursor);
         cursor.close();
 
         return contact;
@@ -197,7 +198,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Looping through all rows and adding to list
         do {
-            Contact contact = cursorToContact(cursor);
+            Contact contact = DatabaseAdapter.cursorToContact(cursor);
 
             // Adding message to list
             contactList.add(contact);
@@ -226,7 +227,7 @@ public class DBHandler extends SQLiteOpenHelper {
         );
 
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = contactToContentValues(newOwnerContact);
+        ContentValues values = DatabaseAdapter.contactToContentValues(newOwnerContact);
 
         // delete old owner contact if already exists
         if (getOwnerContact() != null) {
@@ -253,7 +254,7 @@ public class DBHandler extends SQLiteOpenHelper {
     public synchronized void addMessage(Message message) {
         Log.d(DB_LOG_TAG, "Add Message to DataBase");
         SQLiteDatabase db = getWritableDatabase();
-        ContentValues values = messageToContentValues(message);
+        ContentValues values = DatabaseAdapter.messageToContentValues(message);
 
         // Inserting Row
         db.insert(TABLE_MESSAGE, null, values);
@@ -281,7 +282,7 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         //  Make sender and receiver contact
-        Message message = cursorToMessage(cursor);
+        Message message = DatabaseAdapter.cursorToMessage(cursor);
 
         cursor.close();
         return message;
@@ -310,7 +311,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Looping through all rows and adding to list
         do {
-            Message message = cursorToMessage(cursor);
+            Message message = DatabaseAdapter.cursorToMessage(cursor);
             // Adding message to list
             messageList.add(message);
         } while (cursor.moveToNext());
@@ -342,7 +343,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         // Looping through all rows and adding to list
         do {
-            Message message = cursorToMessage(cursor);
+            Message message = DatabaseAdapter.cursorToMessage(cursor);
             // Adding message to list
             messageList.add(message);
         } while (cursor.moveToNext());
@@ -377,7 +378,7 @@ public class DBHandler extends SQLiteOpenHelper {
         }
         // Looping through all rows and adding to list
         do {
-            Message message = cursorToMessage(cursor);
+            Message message = DatabaseAdapter.cursorToMessage(cursor);
             // Adding message to list
             messageList.add(message);
         } while (cursor.moveToNext());
@@ -403,7 +404,7 @@ public class DBHandler extends SQLiteOpenHelper {
         }
         // Looping through all rows and adding to list
         do {
-            Message message = cursorToMessage(cursor);
+            Message message = DatabaseAdapter.cursorToMessage(cursor);
             // Adding message to list
             messageList.add(message);
         } while (cursor.moveToNext());
@@ -455,49 +456,4 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL(sql);
     }
 
-    private static ContentValues contactToContentValues(Contact contact) {
-
-        ContentValues values = new ContentValues();
-
-        values.put(KEY_CONTACT_ID, contact.getId());
-        values.put(KEY_SERVER_ID, contact.getServerId());
-        values.put(KEY_NAME, contact.getName());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, bos);
-        values.put(KEY_ICON, bos.toByteArray());
-
-        return values;
-    }
-//
-    private static Contact cursorToContact(Cursor cursor) {
-        DataIcon icon = new DataIcon();
-        icon.create(cursor.getBlob(cursor.getColumnIndex("icon")));
-
-        return new Contact(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                cursor.getString(cursor.getColumnIndex("server_id")),
-                cursor.getString(cursor.getColumnIndex("name")),
-                icon
-        );
-    }
-
-    private static ContentValues messageToContentValues(Message message) {
-        ContentValues values = new ContentValues();
-        values.put(KEY_SENDER_ID, message.getSenderId());
-        values.put(KEY_RECEIVER_ID, message.getReceiverId());
-        values.put(KEY_DATE, DateUtils.dateToString(message.getDate()));
-        values.put(KEY_TEXT, message.getText());
-
-        return values;
-    }
-
-    private  Message cursorToMessage(Cursor cursor) {
-        return new Message(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
-                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                cursor.getString(cursor.getColumnIndex("text"))
-        );
-    }
 }
