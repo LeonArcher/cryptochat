@@ -6,22 +6,29 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     private Intent intentService;
     private ServiceConnection connection;
     private boolean serviceIsBound = false;
+    private DateProviderService.DateProviderBinder serviceBinder;
+    private TextView dateView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        intentService = new Intent(this, LoggingService.class);
+        dateView = (TextView) findViewById(R.id.dateTextView);
+
+        intentService = new Intent(this, DateProviderService.class);
         connection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
+                serviceBinder = (DateProviderService.DateProviderBinder) service;
                 serviceIsBound = true;
             }
 
@@ -47,6 +54,12 @@ public class MainActivity extends AppCompatActivity {
         if (serviceIsBound) {
             unbindService(connection);
             serviceIsBound = false;
+        }
+    }
+
+    public void onClickGetDate(View view) {
+        if (serviceIsBound) {
+            dateView.setText(serviceBinder.getCurrentDate());
         }
     }
 }

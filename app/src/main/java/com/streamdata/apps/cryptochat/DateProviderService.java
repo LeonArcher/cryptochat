@@ -14,32 +14,25 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class LoggingService extends Service {
-    public static final String LOG_TAG = "LoggingService";
-    public static final long LOG_INTERVAL_SECONDS = 30;
+public class DateProviderService extends Service {
+    public static final String LOG_TAG = "DateProviderService";
+    public static final long SAVING_INTERVAL_SECONDS = 30;
 
     private ScheduledExecutorService executor = null;
-    private boolean isBound = false;
+    private String currentDateStr = "";
+    private final DateProviderBinder dateProvider = new DateProviderBinder();
 
-    public LoggingService() {
+    public DateProviderService() {
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        isBound = true;
-        return new Binder();
+        return dateProvider;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        isBound = false;
         return true; // returning super.onUnbind(intent) will suppress additional calls of onBind and onUnbind
-    }
-
-    @Override
-    public void onRebind(Intent intent) {
-        isBound = true;
-        super.onRebind(intent);
     }
 
     @Override
@@ -48,7 +41,7 @@ public class LoggingService extends Service {
             executor.shutdown();
         }
         executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleWithFixedDelay(new LoggingTask(this), 0, LOG_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        executor.scheduleWithFixedDelay(new DateMonitoringTask(this), 0, SAVING_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
         return Service.START_STICKY;
     }
@@ -62,26 +55,32 @@ public class LoggingService extends Service {
         super.onDestroy();
     }
 
-    private static class LoggingTask implements Runnable {
+    private static class DateMonitoringTask implements Runnable {
 
-        private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
-        private final WeakReference<LoggingService> parentReference;
+        private final WeakReference<DateProviderService> parentReference;
+        private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
 
-        public LoggingTask(LoggingService parent) {
+        public DateMonitoringTask(DateProviderService parent) {
             this.parentReference = new WeakReference<>(parent);
         }
 
         @Override
         public void run() {
-            boolean isBound = false;
+            DateProviderService parent = parentReference.get();
 
-            LoggingService parent = parentReference.get();
             if (parent != null) {
-                isBound = parent.isBound;
-            }
+                parent.currentDateStr = sdf.format(new Date());
+                Log.d(LOG_TAG, "Saving date");
 
-            String message = String.format("%s | bound state: %b", sdf.format(new Date()), isBound);
-            Log.d(LOG_TAG, message);
+            } else {
+                Log.d(LOG_TAG, "Can't save date - parent is null");
+            }
+        }
+    }
+
+    public class DateProviderBinder extends Binder {
+        String getCurrentDate() {
+            return currentDateStr;
         }
     }
 }

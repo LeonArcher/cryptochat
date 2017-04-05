@@ -12,7 +12,7 @@ public class BootEventReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
 
         // Starting the logging service at device boot
-        Intent loggingServiceIntent = new Intent(context, LoggingService.class);
+        Intent loggingServiceIntent = new Intent(context, DateProviderService.class);
         context.startService(loggingServiceIntent);
     }
 }
