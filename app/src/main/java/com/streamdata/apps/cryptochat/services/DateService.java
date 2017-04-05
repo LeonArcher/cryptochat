@@ -20,7 +20,7 @@ public class DateService extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         timer.scheduleAtFixedRate(new Task(), 0, REPEAT_TIME);
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Nullable
