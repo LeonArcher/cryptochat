@@ -43,8 +43,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
         bindService(intentService, connection, BIND_AUTO_CREATE);
     }
 
@@ -59,7 +59,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickGetDate(View view) {
         if (serviceIsBound) {
-            dateView.setText(serviceBinder.getCurrentDate());
+            String newText = serviceBinder.getCurrentDate();
+
+            if (newText != null) {
+                dateView.setText(newText);
+            }
         }
     }
 }

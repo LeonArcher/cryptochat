@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
@@ -19,8 +20,8 @@ public class DateProviderService extends Service {
     public static final long SAVING_INTERVAL_SECONDS = 30;
 
     private ScheduledExecutorService executor = null;
-    private String currentDateStr = "";
-    private final DateProviderBinder dateProvider = new DateProviderBinder();
+    private volatile String currentDateStr = "";
+    private final DateProviderBinder dateProvider = new DateProviderBinder(this);
 
     public DateProviderService() {
     }
@@ -50,6 +51,7 @@ public class DateProviderService extends Service {
     public void onDestroy() {
         if (executor != null) {
             executor.shutdown();
+            executor = null;
         }
 
         super.onDestroy();
@@ -58,7 +60,7 @@ public class DateProviderService extends Service {
     private static class DateMonitoringTask implements Runnable {
 
         private final WeakReference<DateProviderService> parentReference;
-        private SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
+        private final SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.US);
 
         public DateMonitoringTask(DateProviderService parent) {
             this.parentReference = new WeakReference<>(parent);
@@ -78,9 +80,22 @@ public class DateProviderService extends Service {
         }
     }
 
-    public class DateProviderBinder extends Binder {
-        String getCurrentDate() {
-            return currentDateStr;
+    public static class DateProviderBinder extends Binder {
+
+        private final WeakReference<DateProviderService> parentRef;
+
+        public DateProviderBinder(DateProviderService parent) {
+            parentRef = new WeakReference<>(parent);
+        }
+
+        @Nullable String getCurrentDate() {
+            DateProviderService parent = parentRef.get();
+
+            if (parent == null) {
+                return null;
+            }
+
+            return parent.currentDateStr;
         }
     }
 }
