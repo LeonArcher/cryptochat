@@ -19,7 +19,7 @@ public class LoggingService extends Service {
     public static final long LOG_INTERVAL_SECONDS = 30;
 
     private ScheduledExecutorService executor = null;
-    private boolean isBound = false;
+    private volatile boolean isBound = false;
 
     public LoggingService() {
     }
@@ -57,6 +57,7 @@ public class LoggingService extends Service {
     public void onDestroy() {
         if (executor != null) {
             executor.shutdown();
+            executor = null;
         }
 
         super.onDestroy();
