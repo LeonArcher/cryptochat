@@ -1,5 +1,6 @@
 package com.streamdata.apps.cryptochat.utils;
 
+import com.streamdata.apps.cryptochat.cryptography.CryptographerException;
 import com.streamdata.apps.cryptochat.database.ContactNotFoundException;
 import com.streamdata.apps.cryptochat.database.DBHandler;
 import com.streamdata.apps.cryptochat.models.Contact;
@@ -20,8 +21,8 @@ public class MessageAdapter {
             Locale.US
     );
 
-    public static Message toMessage(RMessage message, DBHandler db)
-            throws ParseException, ContactNotFoundException {
+    public static Message toMessage(RMessage message)
+            throws ParseException, ContactNotFoundException, CryptographerException {
 
         // parse Date from string using server-specific format
         Date dateSentTime = dateFormat.parse(message.getSentTime());
@@ -46,7 +47,9 @@ public class MessageAdapter {
         );
     }
 
-    public static RMessage toRMessage(Message message, DBHandler db) {
+    public static RMessage toRMessage(Message message) throws CryptographerException {
+
+        DBHandler db = DBHandler.getInstance();
 
         Contact sender = db.getContact(message.getSenderId());
         Contact receiver = db.getContact(message.getReceiverId());

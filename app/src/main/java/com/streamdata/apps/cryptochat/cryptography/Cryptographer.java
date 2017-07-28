@@ -1,10 +1,13 @@
 package com.streamdata.apps.cryptochat.cryptography;
 
+import java.io.Externalizable;
+
 /**
  * Interface: Cryptographer - encrypt and decrypt messages.
  */
-public interface Cryptographer {
+public interface Cryptographer extends Externalizable{
     /**
+     *
      * Encrypt input String.
      *
      * @param output    The string that needs to be encrypt.

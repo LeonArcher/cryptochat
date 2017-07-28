@@ -11,14 +11,22 @@ import android.support.annotation.WorkerThread;
 import android.util.Log;
 
 import com.streamdata.apps.cryptochat.ApplicationContext;
+import com.streamdata.apps.cryptochat.cryptography.Cryptographer;
+import com.streamdata.apps.cryptochat.cryptography.CryptographerException;
+import com.streamdata.apps.cryptochat.cryptography.CryptographerFactory;
+import com.streamdata.apps.cryptochat.cryptography.RSACryptographerFactory;
 import com.streamdata.apps.cryptochat.models.Contact;
 import com.streamdata.apps.cryptochat.models.Message;
+import com.streamdata.apps.cryptochat.utils.DataBaseUtils;
 import com.streamdata.apps.cryptochat.utils.DataIcon;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 import java.io.ByteArrayOutputStream;
-import java.sql.SQLDataException;
-import java.text.ParseException;
+
+import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -44,6 +52,7 @@ public class DBHandler extends SQLiteOpenHelper {
     private static final String KEY_NAME = "name";
     private static final String KEY_ICON= "icon";
     private static final String KEY_PUBLIC_KEY= "public_key";
+    private static final String KEY_CRYPTOGRAPHER= "cryptographer";
 
     // Table Messages names
     private static final String KEY_MESSAGE_ID = "id";
@@ -56,18 +65,21 @@ public class DBHandler extends SQLiteOpenHelper {
 
     // Contact table create statement
     private static final String CREATE_TABLE_CONTACT = String.format(
-            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s  TEXT, %s BLOB, %s TEXT)",
+            "CREATE TABLE %s ( %s  INTEGER PRIMARY KEY AUTOINCREMENT, %s TEXT, %s  TEXT," +
+                    " %s BLOB, %s TEXT, %s BLOB)",
             TABLE_CONTACT,
             KEY_CONTACT_ID,
             KEY_SERVER_ID,
             KEY_NAME,
             KEY_ICON,
-            KEY_PUBLIC_KEY
+            KEY_PUBLIC_KEY,
+            KEY_CRYPTOGRAPHER
     );
 
     // Message table create statement
     private static final String CREATE_TABLE_MESSAGE = String.format(
-            "CREATE TABLE %s (%s INTEGER PRIMARY KEY AUTOINCREMENT, %s  TEXT, %s  DATETIME, %s INTEGER, %s INTEGER )",
+            "CREATE TABLE %s (%s INTEGER PRIMARY KEY AUTOINCREMENT, %s  TEXT, %s  DATETIME," +
+                    " %s INTEGER, %s INTEGER )",
             TABLE_MESSAGE,
             KEY_MESSAGE_ID,
             KEY_TEXT,
@@ -139,13 +151,14 @@ public class DBHandler extends SQLiteOpenHelper {
     // Getting Contact by id
     @WorkerThread
     @Nullable
-    public synchronized Contact getContact(int id) {
+    public synchronized Contact getContact(int id) throws CryptographerException{
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(
                 TABLE_CONTACT,
-                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY,
+                        KEY_CRYPTOGRAPHER },
                 String.format(Locale.US, "%s  =? ", KEY_CONTACT_ID),
                 new String[] { String.valueOf(id) },
                 null,
@@ -166,13 +179,14 @@ public class DBHandler extends SQLiteOpenHelper {
 
     @WorkerThread
     @Nullable
-    public synchronized Contact getContactByServerId(String serverId) {
+    public synchronized Contact getContactByServerId(String serverId) throws CryptographerException {
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
         Cursor cursor = db.query(
                 TABLE_CONTACT,
-                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY },
+                new String[] { KEY_CONTACT_ID, KEY_SERVER_ID, KEY_NAME, KEY_ICON, KEY_PUBLIC_KEY,
+                        KEY_CRYPTOGRAPHER },
                 String.format(Locale.US, "%s  =? ", KEY_SERVER_ID),
                 new String[] { serverId },
                 null,
@@ -191,8 +205,9 @@ public class DBHandler extends SQLiteOpenHelper {
         return contact;
     }
 
-    @WorkerThread
-    public synchronized List<Contact> getAllContacts() {
+
+    public synchronized List<Contact> getAllContacts() throws CryptographerException {
+
         Log.d(DB_LOG_TAG, "Get all Contacts from DataBase");
         List<Contact> contactList = new ArrayList<>();
         // Select All Query
@@ -220,16 +235,15 @@ public class DBHandler extends SQLiteOpenHelper {
         return contactList;
     }
 
-    @WorkerThread
-    public synchronized Contact getOwnerContact() {
+    public synchronized Contact getOwnerContact() throws CryptographerException{
+
         Log.d(DB_LOG_TAG, "Get the contact of the Owner");
 
         return getContact(SELF_CONTACT_ID);
     }
 
-    // TODO: handle existing self contact properly
-    @WorkerThread
-    public synchronized void setOwnerContact(Contact contact) {
+    public synchronized void setOwnerContact(Contact contact)throws CryptographerException {
+
         Log.d(DB_LOG_TAG, "Set the contact of the Owner");
 
         Contact newOwnerContact = new Contact(
@@ -237,7 +251,8 @@ public class DBHandler extends SQLiteOpenHelper {
                 contact.getServerId(),
                 contact.getName(),
                 contact.getIcon(),
-                contact.getPublicKey()
+                contact.getPublicKey(),
+                null
         );
 
         SQLiteDatabase db = getWritableDatabase();
@@ -550,28 +565,35 @@ public class DBHandler extends SQLiteOpenHelper {
     private static ContentValues contactToContentValues(Contact contact) {
 
         ContentValues values = new ContentValues();
-
+        // Add fields to ContentValues
         values.put(KEY_CONTACT_ID, contact.getId());
         values.put(KEY_SERVER_ID, contact.getServerId());
         values.put(KEY_NAME, contact.getName());
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        contact.getIconBitmap().compress(Bitmap.CompressFormat.PNG, 0, bos);
-        values.put(KEY_ICON, bos.toByteArray());
         values.put(KEY_PUBLIC_KEY, contact.getPublicKey());
+
+        values.put(KEY_ICON, DataBaseUtils.iconToBytes(contact.getIcon()));
+        values.put(KEY_CRYPTOGRAPHER, DataBaseUtils.cryptographerToBytes(contact.getCryptographer()));
 
         return values;
     }
 
-    private static Contact cursorToContact(Cursor cursor) {
+    private static Contact cursorToContact(Cursor cursor) throws CryptographerException {
+//        Serialize icon
         DataIcon icon = new DataIcon();
-        icon.create(cursor.getBlob(cursor.getColumnIndex("icon")));
+        icon.create(cursor.getBlob(cursor.getColumnIndex(KEY_ICON)));
+//        Serialize cryptographer
+        CryptographerFactory cryptographerFactory = new RSACryptographerFactory();
+        byte[] blob =  cursor.getBlob(cursor.getColumnIndex(KEY_CRYPTOGRAPHER));
+        Cryptographer cryptographer = cryptographerFactory.create(blob);
+
 
         return new Contact(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                cursor.getString(cursor.getColumnIndex("server_id")),
-                cursor.getString(cursor.getColumnIndex("name")),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_CONTACT_ID))),
+                cursor.getString(cursor.getColumnIndex(KEY_SERVER_ID)),
+                cursor.getString(cursor.getColumnIndex(KEY_NAME)),
                 icon,
-                cursor.getString(cursor.getColumnIndex("public_key"))
+                cursor.getString(cursor.getColumnIndex(KEY_PUBLIC_KEY)),
+                cryptographer
         );
     }
 
@@ -587,11 +609,11 @@ public class DBHandler extends SQLiteOpenHelper {
 
     private static Message cursorToMessage(Cursor cursor) throws ParseException {
         return new Message(
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("sender_id"))),
-                Integer.parseInt(cursor.getString(cursor.getColumnIndex("receiver_id"))),
-                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex("date"))),
-                cursor.getString(cursor.getColumnIndex("text"))
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MESSAGE_ID))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_SENDER_ID))),
+                Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_RECEIVER_ID))),
+                DateUtils.stringToDate(cursor.getString(cursor.getColumnIndex(KEY_DATE))),
+                cursor.getString(cursor.getColumnIndex(KEY_TEXT))
         );
     }
 }
