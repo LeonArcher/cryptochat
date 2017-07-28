@@ -1,7 +1,6 @@
 package com.streamdata.apps.cryptochat;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
@@ -19,26 +18,13 @@ import java.util.List;
 
 public class ContactListActivity extends AppCompatActivity {
 
-    // todo: implement contacts load from a database
+    // TODO: implement contacts load from a database
     private final List<Contact> mockContacts = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_list);
-
-        // fill mock contacts array
-        Resources resources = getResources();
-//        mockContacts.add(new Contact(1, "alex45", "Alex",
-//                new ResourceIcon(resources, R.drawable.male_icon)));
-//        mockContacts.add(new Contact(2, "john_s", "John",
-//                new ResourceIcon(resources, R.drawable.santa_icon)));
-//        mockContacts.add(new Contact(3, "jane_f5", "Jane",
-//                new ResourceIcon(resources, R.drawable.female_icon)));
-//        mockContacts.add(new Contact(4, "mr_henry_ford", "Henry",
-//                new ResourceIcon(resources, R.drawable.gentleman_icon)));
-//        mockContacts.add(new Contact(5, "elizabeth_2", "Liza",
-//                new ResourceIcon(resources, R.drawable.lady_icon)));
 
         // create list view and apply custom contacts adapter
         ListView lvContacts = (ListView) findViewById(R.id.listView);

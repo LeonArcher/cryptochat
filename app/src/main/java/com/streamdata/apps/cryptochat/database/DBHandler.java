@@ -22,15 +22,16 @@ import com.streamdata.apps.cryptochat.utils.DataIcon;
 import com.streamdata.apps.cryptochat.utils.DateUtils;
 
 import java.io.ByteArrayOutputStream;
+
 import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 
-@WorkerThread
 public class DBHandler extends SQLiteOpenHelper {
 
     public static final String DB_LOG_TAG = "Database";
@@ -100,10 +101,12 @@ public class DBHandler extends SQLiteOpenHelper {
         return instance;
     }
 
+    @WorkerThread
     private DBHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    @WorkerThread
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(DB_LOG_TAG, "Create DataBase");
@@ -111,9 +114,10 @@ public class DBHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_CONTACT);
         db.execSQL(CREATE_TABLE_MESSAGE);
 
-        Log.d(DB_LOG_TAG, "DataBase has created");
+        Log.d(DB_LOG_TAG, "DataBase has been created");
     }
 
+    @WorkerThread
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.d(DB_LOG_TAG, "Upgrade DataBase");
@@ -134,6 +138,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Adding new Contact
+    @WorkerThread
     public synchronized void addContact(Contact contact) {
         Log.d(DB_LOG_TAG, "Add Contact to DataBase");
         SQLiteDatabase db = getWritableDatabase();
@@ -144,6 +149,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting Contact by id
+    @WorkerThread
     @Nullable
     public synchronized Contact getContact(int id) throws CryptographerException{
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
@@ -171,6 +177,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return contact;
     }
 
+    @WorkerThread
     @Nullable
     public synchronized Contact getContactByServerId(String serverId) throws CryptographerException {
         Log.d(DB_LOG_TAG, "Get Contact from DataBase by id");
@@ -198,7 +205,9 @@ public class DBHandler extends SQLiteOpenHelper {
         return contact;
     }
 
+
     public synchronized List<Contact> getAllContacts() throws CryptographerException {
+
         Log.d(DB_LOG_TAG, "Get all Contacts from DataBase");
         List<Contact> contactList = new ArrayList<>();
         // Select All Query
@@ -215,23 +224,26 @@ public class DBHandler extends SQLiteOpenHelper {
         do {
             Contact contact = cursorToContact(cursor);
 
-            // Adding message to list
-            contactList.add(contact);
+            // Adding contact to list (if not self contact)
+            if (contact.getId() != SELF_CONTACT_ID) {
+                contactList.add(contact);
+            }
         } while (cursor.moveToNext());
 
         cursor.close();
-        // Return message list
+        // Return contact list
         return contactList;
     }
 
     public synchronized Contact getOwnerContact() throws CryptographerException{
+
         Log.d(DB_LOG_TAG, "Get the contact of the Owner");
 
         return getContact(SELF_CONTACT_ID);
     }
 
-    // TODO: handle existing self contact properly
     public synchronized void setOwnerContact(Contact contact)throws CryptographerException {
+
         Log.d(DB_LOG_TAG, "Set the contact of the Owner");
 
         Contact newOwnerContact = new Contact(
@@ -256,6 +268,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Deleting a contact
+    @WorkerThread
     public synchronized void deleteContact(int id) {
         Log.d(DB_LOG_TAG, "Delete Contact by id");
         SQLiteDatabase db = getWritableDatabase();
@@ -268,6 +281,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Adding new Message
+    @WorkerThread
     public synchronized void addMessage(Message message) {
         Log.d(DB_LOG_TAG, "Add Message to DataBase");
         SQLiteDatabase db = getWritableDatabase();
@@ -278,8 +292,9 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Getting one message
+    @WorkerThread
     @Nullable
-    public synchronized Message getMessage(int id) {
+    public synchronized Message getMessage(int id) throws SQLDataException {
         Log.d(DB_LOG_TAG, "Get Message from DataBase by id");
         SQLiteDatabase db = getReadableDatabase();
 
@@ -299,15 +314,24 @@ public class DBHandler extends SQLiteOpenHelper {
         }
 
         //  Make sender and receiver contact
-        Message message = cursorToMessage(cursor);
+        Message message;
 
-        cursor.close();
+        try {
+            message = cursorToMessage(cursor);
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
+
         return message;
     }
 
-    // Getting All Message by senderId
+    // Getting All Messages by senderId
+    @WorkerThread
     @Nullable
-    public synchronized List<Message> getAllMessagesBySenderId(int senderId) {
+    public synchronized List<Message> getAllMessagesBySenderId(int senderId)
+            throws SQLDataException {
         Log.d(DB_LOG_TAG, "Get all messages from DataBase by senderId");
         List<Message> messageList = new ArrayList<>();
 
@@ -326,21 +350,29 @@ public class DBHandler extends SQLiteOpenHelper {
             return null;
         }
 
-        // Looping through all rows and adding to list
-        do {
-            Message message = cursorToMessage(cursor);
-            // Adding message to list
-            messageList.add(message);
-        } while (cursor.moveToNext());
+        try {
+            // Looping through all rows and adding to list
+            do {
+                Message message = cursorToMessage(cursor);
+                // Adding message to list
+                messageList.add(message);
+            } while (cursor.moveToNext());
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
 
-        cursor.close();
         // Return message list
         return messageList;
     }
 
-    // Getting All Message by receiverId
+    // Getting All Messages by receiverId
+    @WorkerThread
     @Nullable
-    public synchronized List<Message> getAllMessagesByReceiverId(int receiverId) {
+    public synchronized List<Message> getAllMessagesByReceiverId(int receiverId)
+            throws SQLDataException {
+
         Log.d(DB_LOG_TAG, "Get all message from DataBase by receiverId");
         List<Message> messageList = new ArrayList<>();
 
@@ -358,21 +390,62 @@ public class DBHandler extends SQLiteOpenHelper {
             return null;
         }
 
-        // Looping through all rows and adding to list
-        do {
-            Message message = cursorToMessage(cursor);
-            // Adding message to list
-            messageList.add(message);
-        } while (cursor.moveToNext());
+        try {
+            // Looping through all rows and adding to list
+            do {
+                Message message = cursorToMessage(cursor);
+                // Adding message to list
+                messageList.add(message);
+            } while (cursor.moveToNext());
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
 
-        cursor.close();
         // Return message list
         return messageList;
     }
 
-    // Getting All Message of a talk
+    // Getting Last Message by senderId
+    @WorkerThread
     @Nullable
-    public synchronized List<Message> getAllMessagesOfTalk(int contactId) {
+    public synchronized Message getLastMessageBySenderId(int senderId) throws SQLDataException {
+        Log.d(DB_LOG_TAG, "Get last message from DataBase by senderId");
+
+        // select last message query
+        String selectQuery = String.format(
+                Locale.US, "SELECT * FROM %s WHERE %s =? ORDER BY %s DESC LIMIT 1",
+                TABLE_MESSAGE,
+                KEY_SENDER_ID,
+                KEY_MESSAGE_ID
+        );
+
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor cursor = db.rawQuery(selectQuery,  new String[] { String.valueOf(senderId) });
+
+        if (!cursor.moveToFirst()) {
+            return null;
+        }
+
+        // get the message
+        Message message;
+
+        try {
+            message = cursorToMessage(cursor);
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
+
+        return message;
+    }
+
+    // Getting All Messages of a talk
+    @WorkerThread
+    @Nullable
+    public synchronized List<Message> getAllMessagesOfTalk(int contactId) throws SQLDataException {
         Log.d(DB_LOG_TAG, "Get all Messages of a talk by senderId and receiverId");
         List<Message> messageList = new ArrayList<>();
 
@@ -393,21 +466,28 @@ public class DBHandler extends SQLiteOpenHelper {
         if (!cursor.moveToFirst()) {
            return null;
         }
-        // Looping through all rows and adding to list
-        do {
-            Message message = cursorToMessage(cursor);
-            // Adding message to list
-            messageList.add(message);
-        } while (cursor.moveToNext());
 
-        cursor.close();
+        try {
+            // Looping through all rows and adding to list
+            do {
+                Message message = cursorToMessage(cursor);
+                // Adding message to list
+                messageList.add(message);
+            } while (cursor.moveToNext());
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
+
         // Return message list
         return messageList;
     }
 
-    // Getting All Message by receiverId
+    // Getting All Messages
+    @WorkerThread
     @Nullable
-    public synchronized List<Message> getAllMessages() {
+    public synchronized List<Message> getAllMessages() throws SQLDataException {
         Log.d(DB_LOG_TAG, "Get all message from DataBase");
         List<Message> messageList = new ArrayList<>();
         // Select All Query
@@ -419,19 +499,26 @@ public class DBHandler extends SQLiteOpenHelper {
         if (!cursor.moveToFirst()) {
             return null;
         }
-        // Looping through all rows and adding to list
-        do {
-            Message message = cursorToMessage(cursor);
-            // Adding message to list
-            messageList.add(message);
-        } while (cursor.moveToNext());
 
-        cursor.close();
+        try {
+            // Looping through all rows and adding to list
+            do {
+                Message message = cursorToMessage(cursor);
+                // Adding message to list
+                messageList.add(message);
+            } while (cursor.moveToNext());
+        } catch (ParseException ex) {
+            throw new SQLDataException(ex);
+        } finally {
+            cursor.close();
+        }
+
         // Return message list
         return messageList;
     }
 
     // Deleting a message
+    @WorkerThread
     public synchronized void deleteMessage(int id) {
         Log.d(DB_LOG_TAG, "Delete Message by id");
         SQLiteDatabase db = getWritableDatabase();
@@ -443,6 +530,7 @@ public class DBHandler extends SQLiteOpenHelper {
     }
 
     // Deleting a talk
+    @WorkerThread
     public synchronized void deleteTalk(int senderId, int receiverId) {
         Log.d(DB_LOG_TAG, "Delete talk by senderId and receiverId");
         SQLiteDatabase db = getWritableDatabase();
@@ -460,7 +548,8 @@ public class DBHandler extends SQLiteOpenHelper {
         );
     }
 
-    // Deleting message older 1 day
+    // Deleting messages older than 1 day
+    @WorkerThread
     public synchronized void deleteOldMessages() {
         Log.d(DB_LOG_TAG, "Delete all Messages");
         SQLiteDatabase db = getWritableDatabase();
@@ -487,7 +576,7 @@ public class DBHandler extends SQLiteOpenHelper {
 
         return values;
     }
-//
+
     private static Contact cursorToContact(Cursor cursor) throws CryptographerException {
 //        Serialize icon
         DataIcon icon = new DataIcon();
@@ -518,7 +607,7 @@ public class DBHandler extends SQLiteOpenHelper {
         return values;
     }
 
-    private  Message cursorToMessage(Cursor cursor) {
+    private static Message cursorToMessage(Cursor cursor) throws ParseException {
         return new Message(
                 Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_MESSAGE_ID))),
                 Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_SENDER_ID))),

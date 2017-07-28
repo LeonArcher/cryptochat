@@ -102,14 +102,17 @@ public class MessageListActivity extends AppCompatActivity {
         receiveCallback = new ReceiveMessagesCallback(this);
         sendCallback = new SendMessagesCallback(this);
 
+        // get database handler (should be already initialized)
+        DBHandler dbHandler = DBHandler.getInstance();
+
         // initializing UI handler, network, message controller, periodic message retriever service
         Handler uiHandler = new Handler();
         NetworkObjectLayer networkObjectLayer = new NetworkObjectLayer(new NetworkDataLayer());
-        messageController = new MessageController(uiHandler, networkObjectLayer);
+        messageController = new MessageController(uiHandler, networkObjectLayer, dbHandler);
         messageRetrieverService = new PeriodicMessageRetrieverService(messageController);
 
         // initializing DB controller
-        dbController = new DBController(uiHandler);
+        dbController = new DBController(dbHandler, uiHandler);
 
         // request history load from DB in background
         dbController.loadMessages(targetContact.getId(), new DbLoadMessagesCallback(this));
@@ -124,6 +127,7 @@ public class MessageListActivity extends AppCompatActivity {
         } catch (CryptographerException e) {
 //            TODO: make something
         }
+
         listView = (ListView) findViewById(R.id.msgListView);
         listView.setAdapter(adapter);
 

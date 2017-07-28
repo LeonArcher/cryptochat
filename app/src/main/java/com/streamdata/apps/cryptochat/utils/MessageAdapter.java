@@ -27,8 +27,6 @@ public class MessageAdapter {
         // parse Date from string using server-specific format
         Date dateSentTime = dateFormat.parse(message.getSentTime());
 
-        DBHandler db = DBHandler.getInstance();
-
         Contact sender = db.getContactByServerId(message.getSenderId());
         Contact receiver = db.getContactByServerId(message.getReceiverId());
 

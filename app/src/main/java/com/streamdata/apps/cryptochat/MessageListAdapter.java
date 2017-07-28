@@ -10,8 +10,10 @@ import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+
 import com.streamdata.apps.cryptochat.cryptography.CryptographerException;
 import com.streamdata.apps.cryptochat.database.DBHandler;
+
 import com.streamdata.apps.cryptochat.models.Message;
 
 import java.util.List;
@@ -30,11 +32,14 @@ public class MessageListAdapter extends BaseAdapter {
             throws CryptographerException {
 
         selfContactId = DBHandler.getInstance().getOwnerContact().getId();
+
         chatMessageList = list;
         inflater = (LayoutInflater) activity
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         scaleScreen = scale;
+
+        this.selfContactId = selfContactId;
     }
 
     private static class ViewHolder {
