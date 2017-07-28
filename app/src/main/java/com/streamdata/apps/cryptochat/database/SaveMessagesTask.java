@@ -12,15 +12,15 @@ import java.util.List;
 public class SaveMessagesTask implements Task<List<Message>> {
 
     private final List<Message> messages;
+    private final DBHandler db;
 
-    public SaveMessagesTask(List<Message> messages) {
+    public SaveMessagesTask(List<Message> messages, DBHandler db) {
         this.messages = messages;
+        this.db = db;
     }
 
     @Override
     public List<Message> run() {
-
-        DBHandler db = DBHandler.getInstance();
 
         for (Message message : messages) {
             db.addMessage(message);

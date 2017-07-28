@@ -2,6 +2,9 @@ package com.streamdata.apps.cryptochat.models;
 
 import android.graphics.Bitmap;
 
+import com.streamdata.apps.cryptochat.cryptography.Cryptographer;
+import com.streamdata.apps.cryptochat.cryptography.CryptographerFactory;
+import com.streamdata.apps.cryptochat.cryptography.RSACryptographerFactory;
 import com.streamdata.apps.cryptochat.utils.Icon;
 
 

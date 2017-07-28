@@ -66,6 +66,7 @@ public class RSACryptographerFactory implements CryptographerFactory {
                 cryptographer = (Cryptographer) is.readObject();
             }
 
+
         } catch (IOException | ClassNotFoundException e) {
             throw new CryptographerException(e.getMessage());
         }
