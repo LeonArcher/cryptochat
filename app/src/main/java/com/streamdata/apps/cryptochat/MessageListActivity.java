@@ -43,7 +43,15 @@ public class MessageListActivity extends AppCompatActivity {
 
             Contact owner = db.getOwnerContact();
 
-            Resources resources = ApplicationContext.getContext().getResources();
+        if (owner == null) {
+            db.setOwnerContact(new Contact(
+                    0,
+                    "alex45",
+                    "Alex",
+                    new ResourceIcon(resources, R.drawable.male_icon)
+            ));
+        }
+
 
             if (owner == null) {
                 db.setOwnerContact(new Contact(
@@ -56,18 +64,16 @@ public class MessageListActivity extends AppCompatActivity {
                 ));
             }
 
-            Contact target = db.getContact(1);
 
-            if (target == null) {
-                db.addContact(new Contact(
-                        1,
-                        "jack_slash",
-                        "Jack",
-                        new ResourceIcon(resources, R.drawable.gentleman_icon),
-                        "",
-                        new RSACryptographerFactory().create()
-                ));
-            }
+        if (target == null) {
+            db.addContact(new Contact(
+                    1,
+                    "jack_slash",
+                    "Jack",
+                    new ResourceIcon(resources, R.drawable.gentleman_icon)
+            ));
+        }
+
 
             selfContact = db.getOwnerContact();
             targetContact = db.getContact(1);

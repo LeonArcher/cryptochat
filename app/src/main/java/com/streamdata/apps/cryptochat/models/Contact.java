@@ -14,28 +14,12 @@ public class Contact {
     private final String serverId;
     private final String name;
     private final Icon icon;
-//    TODO: Delete the field
-    private final String publicKey;
-    private Cryptographer cryptographer;
 
-    public Contact(int id, String serverId, String name, Icon icon, String publicKey) {
-
+    public Contact(int id, String serverId, String name, Icon icon) {
         this.id = id;
         this.serverId = serverId;
         this.name = name;
         this.icon = icon;
-        this.publicKey = publicKey;
-        RSACryptographerFactory cryptographerFactory = new RSACryptographerFactory();
-    }
-
-    public Contact(int id, String serverId, String name, Icon icon, String publicKey,
-                   Cryptographer cryptographer) {
-        this.id = id;
-        this.serverId = serverId;
-        this.name = name;
-        this.icon = icon;
-        this.publicKey = publicKey;
-        this.cryptographer = cryptographer;
     }
 
     @Override
@@ -63,7 +47,4 @@ public class Contact {
         return icon.getBitmap();
     }
 
-    public String getPublicKey() { return publicKey; }
-
-    public Cryptographer getCryptographer() {return cryptographer; }
 }
